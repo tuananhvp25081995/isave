@@ -242,7 +242,7 @@ let createRegistrants = async (data) => {
 
         var dataToSend = JSON.stringify({
             email: email,
-            last_name: last_name ? last_name : first_name,
+            first_name,
             custom_questions: [
                 {
                     title: "telegramID",
