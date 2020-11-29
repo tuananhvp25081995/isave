@@ -19,43 +19,63 @@ const schemaDashboard = new Schema(
             privateChat: { type: Boolean, default: true },
             groupChat: { type: Boolean, default: true },
             switch: { type: Boolean, default: true },
+            isPause: { type: Boolean, default: false }
         },
 
-        user_oauth_code: { type: String, default: "" },
+        user_oauth_code: { type: String, default: "VuMT59Uxyj_FUr1m2ZpQDim0r14iB9Mag" },
         app_client_id: { type: String, default: "bpcThYtThGoff_o0g4a9w" },
-        app_client_secret: {
-            type: String,
-            default: "tXG7CtViLEA1o6ikow1nSZpSwxK8DtJB",
-        },
+        app_client_secret: { type: String, default: "tXG7CtViLEA1o6ikow1nSZpSwxK8DtJB" },
 
-        webinarId: { type: String, default: "82703277688" },
+        //846 2720 4564 for test
+        webinarId: { type: String, default: "84627204564" },
 
-        group_id: { type: String, default: "-483832284" },
-        group_invite_link: {
-            type: String,
-            default: "https://t.me/FinFineGroup",
-        },
+        //-1001417029522  for test group
+        //-1001420387772 for main group
+        group_id: { type: String, default: "-1001417029522" },
+
+        // https://t.me/istest1 for test group
+        // https://t.me/isavewalletgroup for main group
+        group_invite_link: { type: String, default: "https://t.me/istest1", },
 
         appInstallLink: {
             type: String,
-            default:
-                "https://zoom.us/oauth/authorize?response_type=code&client_id=bpcThYtThGoff_o0g4a9w&redirect_uri=https%3A%2F%2Fef6cf576a219.ngrok.io%2Fapi%2Foauth_redirect",
+            default: "https://zoom.us/oauth/authorize?response_type=code&client_id=bpcThYtThGoff_o0g4a9w&redirect_uri=https%3A%2F%2Fairdrop.isavewallet.org%2Foauth",
         },
 
-        redirect_uri: { type: String, default: "" },
-
+        redirect_uri: { type: String, default: "https%3A%2F%2Fairdrop.isavewallet.org%2Foauth" },
         bot_username: { type: String, default: "isavewallet_bot" },
-
+        domain: { type: String, default: "https://airdrop.isavewallet.org" },
         domain_verify_endpoint: {
             type: String,
             default: "https://airdrop.isavewallet.org/email_verify",
         },
 
         bot_text: {
-            BOT_WELCOM_AFTER_START: { type: String, default: "USERNAME" },
+            BOT_WELCOM_AFTER_START: {
+                type: String,
+                default: `Welcome USERNAME
+Please follow up to get started in the campaign
+————————————————————————
+Conditions of participation
+✅Step 1: Join our Telegram Group and Channel
+✅Step 2: Access to your email and confirm registration
+✅Step 3: Like our Twitter Channel
+✅Step 4: Participate in FinFine ecosystem online launching event. The event starts at 14:00 UTC on December 5, 2020
+
+- $15 IST token reward for completing the 4 steps above
+Rewards:
+- $3 IST token reward for each successful referral (the member you referred to must also complete 4 steps of the campaign)
+`
+            },
             BOT_DESCRIPTION: {
                 type: String,
-                default: "🎉🎉🎉 Chào mừng bạn đến chiến dịch Airdrop",
+                default: `🎉🎉🎉 Welcome you to Airdrop Campaign for  Isave Wallet Launching Event  – The new and absolutely secure crypto wallet\n
+                        —————————————————————-\n
+                        🎁 The entire campaign reward is $30000 IST\n
+                        —————————————————————-\n
+                        💎 Currently 1 FFT = $0.1. Isave Token will be traded on cryptocurrency exchanges by the end of December 2020\n
+                        💎 We will distribute IST immediately after the e nd of the campaign\n
+                        ▶️ Please click on “Start” to have a look through the campaign`,
             },
         },
 
@@ -63,7 +83,7 @@ const schemaDashboard = new Schema(
             beforeHour: {
                 type: String,
                 default:
-                    "Opening event will be start within 60min next, remember your join link to join event. If you don't remember, please press 'Zoom' button",
+                    "Opening event will be start within 60 min next, remember your join link to join event. If you don't remember, please press 'Zoom' button",
             },
             beforeDay: {
                 type: String,

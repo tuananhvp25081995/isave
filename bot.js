@@ -5,7 +5,7 @@ let moment = require("moment");
 const Joi = require("joi");
 let mongoose = require("mongoose")
 let DashboardModel = mongoose.model("DashboardModel")
-let UsersModel = mongoose.model("DashboardModel")
+let UserModel = mongoose.model("UserModel")
 let sparkles = require("sparkles")();
 let nodemailer = require("nodemailer");
 let WAValidator = require('wallet-address-validator');
@@ -58,6 +58,7 @@ let transporter = nodemailer.createTransport({
 
 
 let group_id,
+    isPause = false,
     group_invite_link = null,
     bot_username = null,
     domain_verify_endpoint = null,
@@ -67,48 +68,49 @@ let group_id,
     BOT_STATUS_SWITCH = true,
     CONFIG_webinarId = null;
 
-let BOT_STEP_1 = "🎄 Step 1: Join the FinFine Telegram Group by clicking this:\n";
-// let BOT_STEP_2 = "🎄 Step 2: Enter your email and access the email to confirm registration.";
+let BOT_STEP_1 = "🎄 Step 1: Join the Isave Wallet Group by clicking this:\n";
 let BOT_STEP_2 = "🎄 Step 2: Enter your email to confirm registration:";
 let BOT_WRONG_EMAIL = "Your email is not valid. Please check and enter your email again.";
 let BOT_EMAIL_SUCCESS = "Email is successfully verified.";
-let BOT_STEP_3 = "Step 3:\n🧨 Follow our [Finfine Channel](https://t.me/finfinechannel) \n🧨 Follow our [Twitter](https://twitter.com/ConinExchange) \n🧨 Retweet [this tweet](https://twitter.com/ConinExchange/status/1317019011503116290) with hashtags #FFT #CONIN #cryptocurrencies #exchange and tag your friends.\n\n"
-    + "*Submit your Twitter profile link(send 'skip' if you didn't have twitter):*\n(Example: [https://twitter.com/finfine_admin](https://twitter.com/finfine_admin))";
+let BOT_STEP_3 = `Step 3:
+🧨 Follow our [Finfine Channel](https://t.me/isavewalletch)
+🧨 Follow our [Twitter](https://twitter.com/IsaveWallet)
+🧨 Retweet [this tweet](https://twitter.com/IsaveWallet) with hashtags #IST #IsaveWallet #cryptocurrencies #bestwallet and tag your friends.\n
+*Submit your Twitter profile link: *\n(Example: [https://twitter.com/isave_admin](https://twitter.com/isave_admin))`
+
 // The reward is 1, 000, 000 Tokens for the entire campaign.Let's share the campaign to receive bonuses by press 'Share' button
-let BOT_STEP_5 = "Step 5: The Opening event starts at 15:00 UTC – October 25, 2020. Please stay tuned and participate at least 30 minutes to claim rewards";
-let BOT_CHANGE_WALLET = "✨ Enter your ERC-20 wallet address to claim airdrop:\n(ex: 0x6B0359f95796327475ad4F12aE4E1047c3A67fA3)"
+let BOT_STEP_5 = "Step 5: The Opening event starts at 14:00 UTC – December 5, 2020. Please stay tuned and participate at least 45 minutes to claim rewards";
+let BOT_CHANGE_WALLET = "✨ Enter your ERC-20 wallet address to claim airdrop:\n(ex: 0xa9CdF87D7f988c0ae5cc24754C612D3cff029F80)"
 
-let BOT_Statstics_Temple = "🎁Estimated Balance: $ETKREF FFT\n"
-    + "Total Balance: $TOKEN FFT\n"
-    + "Tokens for joining Social Media will be updated after verifying manually by bounty manager at the end of airdrop.\n\n"
-    + "📎Referral link: REFLINK\n"
-    + "👬Referrals: REFCOUNT\n"
-    + "-------------------\nYour details: \n"
-    + "Email: EMAIL \n"
-    + "Telegram ID: TELEGRAM \n"
-    + "Twitter: TWITTER \n"
-    + "Finfine wallet: WALLET \n"
+let BOT_Statstics_Temple = `🎁Estimated Balance: $ETKREF IST
+Total Balance: $TOKEN IST 
+Tokens for airdop event will be updated after verifying manually by bounty manager at the end of airdrop.\n 
+📎Referral link: REFLINK
+👬Referrals: REFCOUNT
+-------------------\nYour details: 
+Email: EMAIL 
+Telegram ID: TELEGRAM  
+Twitter: TWITTER  
+ERC-20 wallet address: WALLET \n`
 
 
+let inviteTemple = `
+🔊🔊Conin Opening Airdrop
+🎉 Time: 01/12/2020  -->  05/12/2020
+💲 Total Airdrop Reward: $30.000 IST
+🔖 Start now: URL\n
+🎁Reward: 
+$ 15 IST when completed all steps
+$ 3 IST for each user from your 👬 Referral.
+Isave Wallet: https://isavewallet.org
+`
 
-let BOT_Statstics_End_Temple = "🎁Estimated Balance: $ETKREF FFT\n"
-    + "Total Balance: $TOKEN FFT\n"
-    + "Tokens for joining Social Media will be updated after verifying manually by bounty manager at the end of airdrop.\n\n"
-    + "📎Referral link: REFLINK\n"
-    + "👬Referrals: REFCOUNT\n"
-    + "-------------------\nYour details: \n"
-    + "Email: EMAIL \n"
-    + "Telegram ID: TELEGRAM \n"
-    + "Twitter: TWITTER \n"
-    + "Finfine wallet: WALLET \n"
 
 let BOT_EVENT_END = "Airdrop Event has end. Thank you for contact to me.\nPlease keeps this chat, we will notify other airdrop."
-
 let emailDomainAllow = ["aol.com", "gmail.com", "hotmail.com", "hotmail.co.uk", "live.com", "yahoo.com", "yahoo.co.uk", "yandex.com", "hotmail.it"];
 
-//15:00GMT 25/10/2020
-let timeEnd = 1603638000000;
-
+//14:00 5/12/2020 GMT+0
+let timeEnd = 1607176800000
 
 sparkles.on("config_change", async () => {
     try {
@@ -122,6 +124,7 @@ sparkles.on("config_change", async () => {
         BOT_BEFORE_DAY = config.remind.beforeDay;
         BOT_STATUS_PRIVATE_CHAT = config.status.privateChat;
         BOT_STATUS_GROUP_CHAT = config.status.groupChat;
+        isPause = config.status.isPause
         BOT_STATUS_SWITCH = config.status.switch;
         CONFIG_webinarId = config.webinarId;
         console.log(curentTime(7), "config updated in bot.js");
@@ -132,20 +135,18 @@ sparkles.on("config_change", async () => {
 
 
 
-let reply_markup_keyboard = {
-    keyboard: [[{ text: "Statstics" }, { text: "Change Wallet" }]],
-    // [{ text: "Change Wallet" }]],
-    // [{ text: "Change Wallet" }, { text: "Zoom" }]],
-    // keyboard: [[{ text: "Share" }, { text: "Statstics" }, { text: "Zoom" }]],
-    resize_keyboard: true,
-};
 // let reply_markup_keyboard = {
-//     keyboard: [[{ text: "Statstics" }, { text: "Share" }],
-//     [{ text: "Change Wallet" }]],
+//     keyboard: [[{ text: "Statstics" }, { text: "Change Wallet" }]],
+//     // [{ text: "Change Wallet" }]],
 //     // [{ text: "Change Wallet" }, { text: "Zoom" }]],
 //     // keyboard: [[{ text: "Share" }, { text: "Statstics" }, { text: "Zoom" }]],
 //     resize_keyboard: true,
 // };
+let reply_markup_keyboard = {
+    keyboard: [[{ text: "Share" }, { text: "Statstics" }],
+    [{ text: "Change Wallet" }, { text: "Zoom" }]],
+    resize_keyboard: true,
+};
 
 
 
@@ -185,6 +186,7 @@ function curentTime(offset = 7) {
     );
 }
 
+
 async function logMsg(msg, type = "text") {
     let { id, first_name, last_name } = msg.from;
     let telegramID = id;
@@ -197,6 +199,10 @@ async function logMsg(msg, type = "text") {
         text = text.toString().split("\n").join(" ");
         console.log(`${curentTime(7)} ${chalk.blue(title)}(${chatId}) receive from ${chalk.blue(fullName)}(${telegramID}): ${text} `);
         return;
+    }
+    if (type === "sticker") {
+        console.log(`${curentTime(7)} ${chalk.blue(title)}(${chatId}) receive sticker from ${chalk.blue(fullName)}(${telegramID}): ${msg.sticker.set_name} `);
+        return
     }
     if (type === "new_chat_members") {
         console.log(`${curentTime(7)} ${chalk.blue(fullName)}(${telegramID}) joined ${chalk.blue(title)}(${chatId})`);
@@ -232,139 +238,122 @@ bot.on("message", async (...parameters) => {
         console.log(curentTime(7), "BOT_STATUS_SWITCH: off");
         return;
     }
+
+    if (isPause) {
+        console.log("stop", telegramID);
+        return bot.sendMessage(telegramID, "Airdrop will temporary pause to mantain for good experience.\nAirdrop will resume soon. Sorry for inconvenient.")
+    }
+
     //this is text message
     if (type === "text") {
 
-
-        // bot.sendMessage(telegramID, "Airdrop will temporary pause to mantain for good experience.\nAirdrop will resume soon. Sorry for inconvenient.")
-        // console.log("stop", telegramID);
-        // return;
-
         if (msg.chat.type === "private") {
-            let user = await UsersModel.findOne({ telegramID }, { registerFollow: 1, social: 1, wallet: 1 }).exec();
+            let user = await UserModel.findOne({ telegramID }, { registerFollow: 1, social: 1, wallet: 1 }).exec();
 
             if (Date.now() > timeEnd) {
                 if (!user || !user.registerFollow.step4.isTwitterOK) {
-                    try {
-                        console.log(curentTime(7), fullName, telegramID, "End event. With text:", text);
-                        await bot.sendMessage(telegramID, BOT_EVENT_END);
-                    } catch (e) {
-                        console.log(e);
-                    }
+                    console.log(curentTime(7), fullName, telegramID, "End event. With text:", text);
+                    bot.sendMessage(telegramID, BOT_EVENT_END).catch(e => { console.log(e) })
                     return;
                 }
-
             }
+
             //user didn't have in database
             if (!user && text.startsWith("/start")) {
-                await bot.sendMessage(telegramID,
+                bot.sendMessage(telegramID,
                     BOT_WELCOM_AFTER_START.replace("USERNAME", `[${fullName}](tg://user?id=${telegramID})`),
-                    { parse_mode: "Markdown" });
+                    { parse_mode: "Markdown" }).catch(e => { console.log("error in first start!", e) })
 
                 //handle for new user without ref invite
                 if (msg.text === "/start") {
-                    handleStart(bot, msg, null);
-                    return;
+                    return handleStart(bot, msg, null);
                 }
+
                 //handle with ref invite
                 let id = text.slice(7).replace(/\D/g, "");
                 if (!id) {
-                    console.log(curentTime("+7000"), telegramID, fullName, "invite link is not valid");
-                    handleStart(bot, msg, null);
-                } else handleStart(bot, msg, id.toString());
-                return;
+                    console.log(curentTime(7), telegramID, fullName, "invite link is not valid");
+                    return handleStart(bot, msg, null);
+                } else return handleStart(bot, msg, id.toString());
             }
-
-
 
 
             if (!user) {
                 console.log(curentTime(7), fullName, telegramID, "No user in db. With text:", text);
-                return;
+                return bot.sendMessage(telegramID,
+                    "Have an error when handle your request.\nPlease click /start to start again.", {
+                    reply_markup: {
+                        remove_keyboard: true
+                    }
+                })
             }
-
 
             //have this user in database. check it out
             if (user && !user.registerFollow.passAll) {
 
                 if (!user.registerFollow.step2.isJoined) {
-                    await bot.sendMessage(telegramID, "Please join telegram group in Step 1.");
-                    return;
+                    return bot.sendMessage(telegramID, "Please join telegram group in Step 1.").catch(e => { console.log("error in check first step!", e) });
                 }
 
-
                 if (text === "change email" && !user.registerFollow.passAll) {
-                    await handleReEnterEmailAgain(bot, msg);
-                    return;
+                    return handleReEnterEmailAgain(bot, msg);
                 }
 
                 if (text === "resend email" && user.registerFollow.step3.isWaitingVerify) {
-                    await handleReSendEmailAgain(bot, msg);
-                    return;
+                    return handleReSendEmailAgain(bot, msg);
                 }
 
                 if (user.registerFollow.step3.isWaitingEnterEmail) {
-                    console.log(curentTime("+7000"), telegramID, "email receive from user typeing:", text);
-                    await handleEnterEmail(bot, msg);
-                    return;
+                    console.log(curentTime(7), telegramID, "email receive from user typeing:", text);
+                    return handleEnterEmail(bot, msg);
                 }
 
                 if (user.registerFollow.log === "step3" && user.registerFollow.step3.isWaitingVerify) {
-                    await bot.sendMessage(telegramID, "Access the email to confirm registration",
+                    return bot.sendMessage(telegramID, "Access the email to confirm registration",
                         { reply_markup: reply_markup_keyboard_verify_email }
-                    );
-                    return;
+                    ).catch(e => console.log("have error in send email noti!", e))
                 }
                 else {
-                    console.log(curentTime(7), fullName, fullName, telegramID, "have not dont registerFollow with text", text);
-                    return;
+                    return console.log(curentTime(7), fullName, fullName, telegramID, "have not dont registerFollow with text", text);
                 }
             };
 
 
             if (user && !user.registerFollow.step4.isTwitterOK) {
                 console.log("in step4 ok with text link", telegramID, fullName, text);
-
-                let back = await parse(text, true);
-                // console.log(back)
-
-                // if (!back.slashes || back.hostname !== "twitter.com") {
-
-                // }
-
-                if (back.hostname === "twitter.com" || back.hostname === "mobile.twitter.com") {
-                    await UsersModel.findOneAndUpdate({ telegramID }, { "registerFollow.step4.isTwitterOK": true, "social.twitter": text, "wallet.changeWallet": true }, { useFindAndModify: false }).exec();
-                    bot.sendMessage(telegramID, BOT_CHANGE_WALLET);
-                    return;
-                } else {
-                    bot.sendMessage(telegramID, "You has enter an valid link, please submit again: ")
-                    return;
+                let checkTwitter = null
+                try {
+                    checkTwitter = await parse(text, true);
+                } catch (e) {
+                    console.log("have err in checkTwitter", e);
                 }
 
+                if (checkTwitter.hostname === "twitter.com" || checkTwitter.hostname === "mobile.twitter.com") {
+                    await UserModel.updateOne({ telegramID }, { "registerFollow.step4.isTwitterOK": true, "social.twitter": text, "wallet.changeWallet": true }).exec();
+                    return bot.sendMessage(telegramID, BOT_CHANGE_WALLET);
+                } else {
+                    return bot.sendMessage(telegramID, "You has enter an valid link, please submit again: ")
+                }
             }
 
             if (user && user.wallet.changeWallet) {
                 var valid = WAValidator.validate(text, 'ETH');
                 console.log(curentTime(), fullName, telegramID, "in changeWallet text:", text);
                 if (valid) {
-                    await UsersModel.findOneAndUpdate({ telegramID }, { "wallet.changeWallet": false, "wallet.erc20": text.toUpperCase() }, { useFindAndModify: false });
+                    await UserModel.updateOne({ telegramID }, { "wallet.changeWallet": false, "wallet.erc20": text.toUpperCase() });
 
                     if (!user.registerFollow.sendAllStep) {
-                        await UsersModel.findOneAndUpdate({ telegramID }, { "registerFollow.sendAllStep": true, }, { useFindAndModify: false });
+                        await UserModel.findOneAndUpdate({ telegramID }, { "registerFollow.sendAllStep": true });
                         await sendStep4_Finish({ telegramID, msg });
                         return;
                     }
-                    await bot.sendMessage(telegramID, "Your wallet was update.");
-                    return;
+                    return bot.sendMessage(telegramID, "Your wallet was update.");
                 } else {
-
                     if (!user.registerFollow.sendAllStep) {
-                        await bot.sendMessage(telegramID, "Oops\nYou was enter an valid wallet address. Press submit wallet address again");
-                        return;
+                        return bot.sendMessage(telegramID, "Oops\nYou was enter an valid wallet address. Press submit wallet address again");
                     }
-                    await UsersModel.findOneAndUpdate({ telegramID }, { "wallet.changeWallet": false }, { useFindAndModify: false });
-                    await bot.sendMessage(telegramID, "Oops\nYou was enter an valid wallet address. Press *Change Wallet* to change again", { parse_mode: "markdown", });
-                    return;
+                    await UserModel.updateOne({ telegramID }, { "wallet.changeWallet": false });
+                    return bot.sendMessage(telegramID, "Oops\nYou was enter an valid wallet address. Press *Change Wallet* to change again", { parse_mode: "markdown", });
                 }
             }
 
@@ -373,7 +362,7 @@ bot.on("message", async (...parameters) => {
                 switch (text) {
                     case "share":
                     case "/share":
-                        // handleInvite(bot, msg);
+                        handleInvite(bot, msg);
                         break;
                     case "statstics":
                     case "/statstics":
@@ -382,48 +371,43 @@ bot.on("message", async (...parameters) => {
 
                     case "zoom":
                     case "/zoom":
-                        bot.sendMessage(
-                            msg.from.id,
-                            "Zoom event has ended. We will notify you when have news.",
-                            {
-                                disable_web_page_preview: true,
-                                reply_markup: reply_markup_keyboard_end
-                            }
-                        );
                         // bot.sendMessage(
                         //     msg.from.id,
-                        //     "✨ Your unique link to join zoom event: " +
-                        //     (await handleLinkZoom({ telegramID: msg.from.id })),
-                        //     { disable_web_page_preview: true }
+                        //     "Zoom event has ended. We will notify you when have news.",
+                        //     {
+                        //         disable_web_page_preview: true,
+                        //         reply_markup: reply_markup_keyboard_end
+                        //     }
                         // );
+                        bot.sendMessage(telegramID,
+                            "✨ Your unique link to join zoom event: " +
+                            (await handleLinkZoom({ telegramID })) + "\n\nPlease keep it save and don't share this link to other people",
+                            { disable_web_page_preview: true }
+                        );
                         break;
 
 
                     case "news":
-                        bot.sendMessage(
-                            msg.from.id,
-                            "Currently do not have any airdrop yet, we will notify for you in futher event.\nHope you have a nice day",
-                            {
-                                disable_web_page_preview: true,
-                                reply_markup: reply_markup_keyboard_end
-                            }
+                        bot.sendMessage(telegramID,
+                            "Currently do not have any news yet, we will notify for you in futher news.\nHope you have a nice day",
+                            { disable_web_page_preview: true }
                         );
                         break;
 
 
-                    case "conin exchange":
-                        bot.sendMessage(
-                            msg.from.id,
-                            "Join our exchange at https://conin.ai",
-                            {
-                                disable_web_page_preview: true,
-                                reply_markup: reply_markup_keyboard_end
-                            }
-                        );
-                        break;
+                    // case "conin exchange":
+                    //     bot.sendMessage(
+                    //         msg.from.id,
+                    //         "Join our exchange at https://conin.ai",
+                    //         {
+                    //             disable_web_page_preview: true,
+                    //             reply_markup: reply_markup_keyboard_end
+                    //         }
+                    //     );
+                    //     break;
 
                     case "change wallet":
-                        await UsersModel.findOneAndUpdate({ telegramID }, { "wallet.changeWallet": true }, { useFindAndModify: false });
+                        await UserModel.updateOne({ telegramID }, { "wallet.changeWallet": true });
                         bot.sendMessage(telegramID, BOT_CHANGE_WALLET, { disable_web_page_preview: true });
                         break;
 
@@ -431,7 +415,6 @@ bot.on("message", async (...parameters) => {
                         bot.sendMessage(telegramID, "ok", {
                             reply_markup: reply_markup_keyboard
                         })
-
                     default:
                         break;
                 }
@@ -486,14 +469,14 @@ let handleLeftChatMember = async (bot, msg) => {
     console.log(curentTime(7), id, fullName, "left group chat, starting delete them in database");
     try {
 
-        await UsersModel.findOneAndUpdate(
+        await UserModel.findOneAndUpdate(
             { telegramID: id },
             { $set: { "isLeftGroup": true } },
             { useFindAndModify: false }
         ).exec();
 
-        // await UsersModel.findOneAndRemove({ telegramID: id }, { useFindAndModify: false }).exec();
-        let totalUsers = await UsersModel.find({ "registerFollow.step4.isTwitterOK": true }).countDocuments().exec();
+        // await UserModel.findOneAndRemove({ telegramID: id }, { useFindAndModify: false }).exec();
+        let totalUsers = await UserModel.find({ "registerFollow.step4.isTwitterOK": true }).countDocuments().exec();
         sparkles.emit("totalUsers", { totalUsers });
         await bot.deleteMessage(msg.chat.id, msg.message_id);
         await bot.sendMessage(id, "Warning: you left group, your ref will be delete.", {
@@ -518,7 +501,7 @@ sparkles.on("sendRemindHour", async () => {
                 return;
             }
             sendRemindHour_doing = true;
-            let users = await UsersModel
+            let users = await UserModel
                 .find(
                     {
                         "remind.isBeforeHour": false,
@@ -577,7 +560,7 @@ sparkles.on("sendRemindHour", async () => {
                         console.log("this user block bot", users[i].telegramID);
                     }
 
-                    await UsersModel
+                    await UserModel
                         .findOneAndUpdate(
                             { telegramID: users[i].telegramID },
                             { $set: { "remind.isBeforeHour": true } },
@@ -618,7 +601,7 @@ let sendRemindDay_doing = false;
 //test send bulk message;
 
 let sendMessageAsync = async ({ telegramID }) => {
-    let user = await UsersModel.findOne({ telegramID }, { telegramID: 1, fullName: 1 }).exec();
+    let user = await UserModel.findOne({ telegramID }, { telegramID: 1, fullName: 1 }).exec();
 
     if (user) {
         sparkles.emit("remind", { type: "day", status: "sending" });
@@ -632,7 +615,7 @@ let sendMessageAsync = async ({ telegramID }) => {
         }).catch(err => {
             console.error(telegramID, err)
         }).finally(fn => {
-            UsersModel
+            UserModel
                 .findOneAndUpdate(
                     { telegramID: telegramID },
                     { $set: { "remind.isBeforeDay": true } },
@@ -654,7 +637,7 @@ sparkles.on("sendRemindDay", async () => {
 
     //grab list users didnt sent into sendRemindDay_SET_notSend
     try {
-        let users = await UsersModel
+        let users = await UserModel
             .find({
                 "webminarLog.totalTime": { $gte: 1, $lt: 1800000, },
                 "remind.isBeforeDay": false,
@@ -708,7 +691,7 @@ sparkles.on("sendCustom", async ({ body }) => {
 
     //grab list users didnt sent into sendRemindDay_SET_notSend
     try {
-        let users = await UsersModel
+        let users = await UserModel
             .find({
                 "webminarLog.reportTime": { $gte: 30 },
                 "remind.isBeforeDay": true,
@@ -723,7 +706,7 @@ sparkles.on("sendCustom", async ({ body }) => {
             } catch (e) {
                 console.log(e);
             } finally {
-                UsersModel
+                UserModel
                     .findOneAndUpdate(
                         { telegramID: users[i].telegramID },
                         { $set: { "remind.isBeforeDay": true, "remind.isCustom": true } },
@@ -752,7 +735,7 @@ sparkles.on("sendCustom", async ({ body }) => {
 //                 return;
 //             }
 //             sendRemindDay_doing = true;
-//             let users = await UsersModel
+//             let users = await UserModel
 //                 .find(
 //                     {
 //                         "remind.isBeforeDay": false,
@@ -804,7 +787,7 @@ sparkles.on("sendCustom", async ({ body }) => {
 //                     }).catch(err => {
 //                         console.error(err)
 //                     }).finally(fn => {
-//                         UsersModel
+//                         UserModel
 //                             .findOneAndUpdate(
 //                                 { telegramID: users[i].telegramID },
 //                                 { $set: { "remind.isBeforeDay": true } },
@@ -852,12 +835,12 @@ async function sendStep3_Twitter({ telegramID }) {
 
 async function sendStep4_Finish({ telegramID }) {
 
-    let user = await UsersModel.findOne({ telegramID }).exec();
+    let user = await UserModel.findOne({ telegramID }).exec();
     if (!user) return;
     user.registerFollow.step4.isTwitterOK = true;
     await user.save();
 
-    // await UsersModel.findOneAndUpdate({ telegramID }, { "user.registerFollow.step4.isTwitterOK": true }, { useFindAndModify: false }).exec();
+    // await UserModel.findOneAndUpdate({ telegramID }, { "user.registerFollow.step4.isTwitterOK": true }, { useFindAndModify: false }).exec();
 
     await bot.sendMessage(telegramID, "Step 4: Save your Zoom Meeting Opening event: " + (await handleLinkZoom({ telegramID })),
         { disable_web_page_preview: true }
@@ -880,7 +863,7 @@ async function sendStep4_Finish({ telegramID }) {
     handleInvite(bot, msg, true)
 
     try {
-        let totalUsers = await UsersModel.find({ "registerFollow.step4.isTwitterOK": true }).countDocuments().exec();
+        let totalUsers = await UserModel.find({ "registerFollow.step4.isTwitterOK": true }).countDocuments().exec();
         sparkles.emit("totalUsers", { totalUsers });
     } catch (e) {
         console.error(e);
@@ -902,27 +885,24 @@ async function handleStatstics(bot, msg) {
     let telegramID = msg.from.id;
     let back = await getStatstics({ telegramID });
 
-    let user = await UsersModel.findOne({ telegramID });
+    let user = await UserModel.findOne({ telegramID });
     if (!user) return;
     let url = "https://t.me/" + bot_username + "?start=" + telegramID;
 
 
 
     if (back.result && user) {
+        // if (user.webminarLog.reportTime < 30) {
+        //     let toSend = "After the data analysis process, we acknowledged that your meeting time is less than 30 minutes, which does not meet the reward claim requirement. Therefore, we regret to announce that your account is not qualified enough to claim the reward in this Airdrop Campaign."
+        //         + "\n\nWe hope you will always follow and support us as we will organize many other airdrop campaigns in the future. We will bring the latest airdrop news to you. Thank you for joining us!"
 
-
-        if (user.webminarLog.reportTime < 30) {
-
-            let toSend = "After the data analysis process, we acknowledged that your meeting time is less than 30 minutes, which does not meet the reward claim requirement. Therefore, we regret to announce that your account is not qualified enough to claim the reward in this Airdrop Campaign."
-                + "\n\nWe hope you will always follow and support us as we will organize many other airdrop campaigns in the future. We will bring the latest airdrop news to you. Thank you for joining us!"
-
-            try {
-                bot.sendMessage(telegramID, toSend, { disable_web_page_preview: true, reply_markup: reply_markup_keyboard_end });
-            } catch (e) {
-                console.log(e);
-            }
-            return;
-        }
+        //     try {
+        //         bot.sendMessage(telegramID, toSend, { disable_web_page_preview: true, reply_markup: reply_markup_keyboard_end });
+        //     } catch (e) {
+        //         console.log(e);
+        //     }
+        //     return;
+        // }
 
         let toSend = BOT_Statstics_Temple.toString()
             .replace("EMAIL", user.mail.email.toString())
@@ -931,32 +911,27 @@ async function handleStatstics(bot, msg) {
             .replace("ETKREF", back.ETKREF.toString())
             .replace("TOKEN", back.FTTTotal.toString())
             .replace("REFCOUNT", back.inviteTotal.toString())
-            // .replace("REFCOUNT", back.inviteGetGiftSuccess.toString())
+            .replace("REFCOUNT", back.inviteGetGiftSuccess.toString())
             .replace("REFLINK", url.toString())
             .replace("TWITTER", user.social.twitter.toString())
-        try {
 
-            // await bot.sendMessage(telegramID, toSend, { parse_mode: "Markdown", disable_web_page_preview: true });
-            await bot.sendMessage(telegramID, toSend, { disable_web_page_preview: true, reply_markup: reply_markup_keyboard });
-        } catch (e) {
-            console.log(e);
-        }
+        bot.sendMessage(telegramID, toSend, { disable_web_page_preview: true, reply_markup: reply_markup_keyboard })
+            .catch(e => console.log(e))
+
     }
 }
 
 async function handleReSendEmailAgain(bot, msg) {
-    //this code will resend email to confirm
     let telegramID = msg.from.id;
     try {
-        let user = await UsersModel.findOne({ telegramID }, { mail: 1 }).exec();
+        let user = await UserModel.findOne({ telegramID, "mail.isVerify": false }, { mail: 1 }).exec();
+        if (!user) {
+            console.log("have error when handle resend email:", msg.from);
+            return bot.sendMessage(telegramID, "have error when handle your request, please contact support support@isavewallet.org!")
+        }
         let email = user.mail.email;
         let verifyCode = user.mail.verifyCode;
-        let href =
-            domain_verify_endpoint +
-            "?code=" +
-            verifyCode +
-            "&telegramID=" +
-            telegramID;
+        let href = domain_verify_endpoint + "?code=" + verifyCode + "&telegramID=" + telegramID;
         console.log(curentTime(7), href);
 
         let msg = {
@@ -965,16 +940,12 @@ async function handleReSendEmailAgain(bot, msg) {
             subject: 'Please confirm your email to join Airdrop event',
             html: MAIL_TEMPLE.replace("linklinklink", href),
         }
-        try {
-            await transporter.sendMail(msg);
-        } catch (e) {
-            console.log(e);
-        }
 
-        await bot.sendMessage(
-            telegramID,
-            "Email verify was resent to you, please check it out"
-        );
+        transporter.sendMail(msg).catch(e => {
+            console.log("have error in send email again", e);
+        })
+
+        bot.sendMessage(telegramID, "Email verify was resent to you, please check it out");
     } catch (e) {
         console.error(e);
     }
@@ -1009,38 +980,21 @@ async function handleEnterEmail(bot, msg) {
     if (back.result) {
         let href = domain_verify_endpoint + "?code=" + back.verifyCode + "&telegramID=" + telegramID;
         console.log(curentTime(7), href);
-        const msg = {
-            to: value.email, // Change to your recipient
+        let msg = {
+            to: value.email,
             from: sendFrom,
             subject: 'Please confirm your email to join Airdrop event',
             html: MAIL_TEMPLE.replace("linklinklink", href),
         }
-        try {
 
-            await transporter.sendMail(msg);
-        } catch (e) {
-            console.log(e);
-        }
-        await bot.sendMessage(
-            telegramID,
-            "🎄 Please check your email to confirm!",
+        transporter.sendMail(msg).catch(e => { console.log("have error when send mail to", value.email) })
+        return bot.sendMessage(telegramID, "🎄 Please check your email to confirm!",
             { reply_markup: reply_markup_keyboard_verify_email }
         );
 
-        return;
-    } else {
-        if (back.error === "used") {
-            await bot.sendMessage(
-                telegramID,
-                "Your email you type have been used, please use different email"
-            );
-        }
-        console.log(
-            curentTime(),
-            telegramID,
-            msg.text,
-            "this mail have been used"
-        );
+    } else if (back.error === "used") {
+        console.log(curentTime(), telegramID, msg.text, "this mail have been used");
+        bot.sendMessage(telegramID, "Your email you type have been used, please use different email");
     }
 }
 
@@ -1099,7 +1053,6 @@ async function handleStart(bot, msg, ref) {
 
 
     let getChatMember = await bot.getChatMember(group_id.toString(), telegramID);
-
     if (getChatMember.status === "member") {
         console.log("user already in group but in db still false, so update it");
         await handleNewUserJoinGroup({ telegramID, fullName });
@@ -1122,67 +1075,14 @@ async function handleLinkZoom({ telegramID }) {
     return null;
 }
 
-// async function fakerRegistrant(bot, msg) {
-//     let fakeData = {
-//         telegramID: msg.from.id,
-//         email: faker.internet.email(),
-//         first_name: faker.name.firstName(),
-//         last_name: faker.name.lastName(),
-//     };
-
-//     let createRegistrantsBack = await createRegistrants(fakeData);
-
-//     if (createRegistrantsBack.result) {
-//         console.log(curentTime(), "createRegistrantsBack ok");
-//         bot.sendMessage(msg.from.id, createRegistrantsBack.toString());
-//     } else {
-//         console.log(
-//             curentTime(),
-//             "createRegistrantsBack failed",
-//             createRegistrantsBack
-//         );
-//         bot.sendMessage(msg.from.id, "createRegistrantsBack failed");
-//     }
-// }
-
-
-
-// function handleGetGroupID(bot, msg) {
-//     // console.log(msg)
-//     if (
-//         msg.chat.type &&
-//         (msg.chat.type === "group" || msg.chat.type === "supergroup")
-//     ) {
-//         console.log(
-//             curentTime(),
-//             msg.from.id,
-//             msg.from.first_name,
-//             msg.from.last_name,
-//             "get groupid in: ",
-//             msg.chat.id
-//         );
-//         bot.sendMessage(msg.chat.id, "Group id is: " + msg.chat.id);
-//     }
-// }
 
 function handleInvite(bot, msg, first = false) {
 
 
-    let toSend = "🎉🎢 Share your referral link to get $3 FFT each user completed all step above:\n";
+    let toSend = "🎉🎢 Share your referral link to get $3 IST each user completed all step above:\n";
     let url = "https://t.me/" + bot_username + "?start=" + msg.from.id;
     toSend += url;
-
-    let full = "🔊🔊Conin Opening Airdrop\n"
-        + "🎉 Time: 16/10/2020  -->  25/10/2020\n"
-        + "💲 Total Airdrop Reward: $10.000 FFT \n"
-        + "🔖 Start now: " + url + "\n\n"
-        + "🎁🎁Reward: \n"
-        + "$ 20 FFT when completed all steps\n"
-        + "$ 3 FFT for each user from your 👬 Referral.\n"
-        + "Conin Exchange: https://conin.ai\n"
-
-
-
+    let full = inviteTemple.replace("URL", url)
     if (first) {
         bot.sendMessage(
             msg.from.id,

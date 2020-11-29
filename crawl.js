@@ -1,7 +1,7 @@
 let XLSX = require('xlsx');
 require("./js/datebase").connect();
 
-let { UsersModel } = require("./js/Models/users");
+let { UserModel } = require("./js/Models/users");
 
 
 let workbook = XLSX.readFile('report.xlsx');
@@ -15,8 +15,8 @@ let a = async () => {
         let time = worksheet["J" + i].v;
         console.log(email, time);
         try {
-            let user = await UsersModel.findOne({ "mail.email": email });
-            if (!user) user = new UsersModel({ telegramID: 1 });
+            let user = await UserModel.findOne({ "mail.email": email });
+            if (!user) user = new UserModel({ telegramID: 1 });
             user.webminarLog.reportTime = Number(user.webminarLog.reportTime + Number(time))
             await user.save();
         } catch (e) {

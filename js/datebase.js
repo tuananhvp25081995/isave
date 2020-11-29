@@ -1,4 +1,5 @@
 let mongoose = require("mongoose");
+let sparkles = require("sparkles")()
 var dbconnect = function () {
     let mongoOption = {
         useNewUrlParser: true,
@@ -13,6 +14,9 @@ var dbconnect = function () {
         .connect("mongodb://localhost/isavebot", mongoOption)
         .then((a) => {
             console.log("DB has connect!");
+
+            sparkles.emit("init");
+
             let database = mongoose.connection;
 
             database.on(

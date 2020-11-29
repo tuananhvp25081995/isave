@@ -2,7 +2,7 @@ var express = require("express");
 var router = express.Router();
 let mongoose = require("mongoose")
 let DashboardModel = mongoose.model("DashboardModel")
-let UsersModel = mongoose.model("DashboardModel")
+let UserModel = mongoose.model("UserModel")
 var sparkles = require("sparkles")();
 let { handleOauthRedirectUri } = require("../controllers/zoomControllers");
 let {
@@ -45,7 +45,7 @@ sparkles.on("config_change", async () => {
 router.get("/getalluser", async function (req, res, next) {
     let start = Date.now();
     try {
-        let users = await UsersModel.find().sort({ joinDate: -1 }).exec();
+        let users = await UserModel.find().sort({ joinDate: -1 }).exec();
         users = users.map((item) => {
             return {
                 telegramID: item.telegramID,
@@ -94,7 +94,7 @@ router.post("/fake", async (req, res) => {
         a.push(one);
         if (c > 10000 || i === 100000) {
             c = 0;
-            await UsersModel.insertMany(a);
+            await UserModel.insertMany(a);
             a = []
         }
         c++;
@@ -229,12 +229,12 @@ router.post("/botconfig", async (req, res) => {
 router.get("/botremind", async function (req, res) {
     try {
         let config = await DashboardModel.findOne({ config: 1 });
-        let totalUser = await UsersModel.find({ "registerFollow.step4.isTwitterOK": true, "webminarLog.isEnough30min": true }).countDocuments().exec();
-        let beforeHourCount = await UsersModel
+        let totalUser = await UserModel.find({ "registerFollow.step4.isTwitterOK": true, "webminarLog.isEnough30min": true }).countDocuments().exec();
+        let beforeHourCount = await UserModel
             .find({ "remind.isBeforeHour": true, "webminarLog.isEnough30min": true })
             .countDocuments()
             .exec();
-        let beforeDayCount = await UsersModel
+        let beforeDayCount = await UserModel
             .find({ "remind.isBeforeDay": true })
             .countDocuments()
             .exec();
@@ -257,7 +257,7 @@ router.get("/botremind", async function (req, res) {
                 beforeDay: config.remind.beforeDay,
                 beforeDayCount:
                     // beforeDayCount.toString() + "/" + totalUser.toString(),
-                    beforeDayCount.toString() + "/" + (await UsersModel.find({ "webminarLog.totalTime": { $gte: 1, $lt: 1800000 } }).countDocuments().exec()).toString(),
+                    beforeDayCount.toString() + "/" + (await UserModel.find({ "webminarLog.totalTime": { $gte: 1, $lt: 1800000 } }).countDocuments().exec()).toString(),
                 day: remind.day,
                 hour: remind.hour,
             },
@@ -346,7 +346,7 @@ router.get("/oauth_redirect", async function (req, res) {
 
 router.get("/userOnline", async (req, res) => {
     try {
-        let totalUsers = await UsersModel
+        let totalUsers = await UserModel
             .find({ "registerFollow.step4.isTwitterOK": true })
             .countDocuments()
             .exec();

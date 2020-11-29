@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 let { v4 } = require("uuid");
 let DashboardModel = mongoose.model("DashboardModel")
-let UsersModel = mongoose.model("DashboardModel")
+let UserModel = mongoose.model("UserModel")
 let moment = require("moment");
 
 function curentTime(offset = 7) {
@@ -12,7 +12,7 @@ let handleNewUserNoRef = async (data) => {
     let { telegramID, fullName } = data;
 
     try {
-        let userCheck = await UsersModel
+        let userCheck = await UserModel
             .findOne({ telegramID }).exec();
         if (userCheck) {
             console.log(curentTime(7), userCheck.telegramID, fullName, "user was joined to chat group before");
@@ -26,7 +26,7 @@ let handleNewUserNoRef = async (data) => {
             };
             return toReturn;
         } else {
-            let newUser = new UsersModel();
+            let newUser = new UserModel();
             newUser.telegramID = telegramID;
             newUser.fullName = fullName;
             newUser.joinDate = Date.now();
@@ -60,7 +60,7 @@ let handleNewUserWithRef = async (data) => {
     let { telegramID, fullName, ref } = data;
 
     try {
-        let userCheck = await UsersModel
+        let userCheck = await UserModel
             .findOne({
                 telegramID,
             })
@@ -89,7 +89,7 @@ let handleNewUserWithRef = async (data) => {
             };
             return toReturn;
         } else {
-            let newUser = new UsersModel({
+            let newUser = new UserModel({
                 telegramID,
                 fullName,
                 refTelegramID: await checkAndUpdateRefId(data),
@@ -129,7 +129,7 @@ let handleNewUserWithRef = async (data) => {
 
 let checkAndUpdateRefId = async (data) => {
     let { telegramID, ref } = data;
-    let refUser = await UsersModel
+    let refUser = await UserModel
         .findOne({
             telegramID: ref,
         })
@@ -157,7 +157,7 @@ let checkAndUpdateRefId = async (data) => {
 };
 
 let isJoinedGroup = async ({ telegramID }) => {
-    let user = await UsersModel
+    let user = await UserModel
         .findOne({
             telegramID,
         })
@@ -172,13 +172,13 @@ let getStatstics = async ({ telegramID }) => {
         result: true,
     };
     try {
-        let user = await UsersModel
+        let user = await UserModel
             .findOne({
                 telegramID,
             })
             .exec();
         if (user) {
-            let listInviteSuccessCount = await UsersModel
+            let listInviteSuccessCount = await UserModel
                 .find({
                     refTelegramID: user.telegramID,
                     "registerFollow.passAll": true,
@@ -222,7 +222,7 @@ let getStatstics = async ({ telegramID }) => {
 
 let isHaveMailAndVerified = async (data) => {
     let { telegramID } = data;
-    let user = await UsersModel
+    let user = await UserModel
         .findOne({
             telegramID,
         })
@@ -244,7 +244,7 @@ let isHaveMailAndVerified = async (data) => {
 
 let setEmailWaitingVerify = async ({ telegramID }, isWaitingVerify) => {
     try {
-        let user = await UsersModel
+        let user = await UserModel
             .findOne({
                 telegramID,
             })
@@ -262,7 +262,7 @@ let setEmailWaitingVerify = async ({ telegramID }, isWaitingVerify) => {
 
 let setWaitingEnterEmail = async ({ telegramID }, isWaitingEnterEmail) => {
     try {
-        let user = await UsersModel
+        let user = await UserModel
             .findOne({
                 telegramID,
             })
@@ -282,18 +282,13 @@ let setEmailAndUpdate = async ({ telegramID, email }) => {
     console.log(curentTime(), "setEmailAndUpdate", telegramID, email);
 
     try {
-        let user = await UsersModel
-            .findOne({
-                telegramID,
-            })
-            .exec();
+        let user = await UserModel.findOne({ telegramID })
 
-        let checkUsed = await UsersModel
-            .findOne({
-                "mail.email": email,
-                "mail.isVerify": true,
-            })
-            .exec();
+        let checkUsed = await UserModel.findOne({
+            "mail.email": email,
+            "mail.isVerify": true,
+        })
+
 
         if (checkUsed) {
             return {
@@ -305,7 +300,7 @@ let setEmailAndUpdate = async ({ telegramID, email }) => {
         if (user) {
             user.mail.email = email.toString().toLowerCase();
             user.mail.isVerify = false;
-            user.mail.verifyCode = v4();
+            user.mail.verifyCode = v4().toString().slice(0, 8);
             user.registerFollow.log === "step3";
             user.registerFollow.step3.isWaitingEnterEmail = false;
             user.registerFollow.step3.isWaitingVerify = true;
@@ -317,7 +312,7 @@ let setEmailAndUpdate = async ({ telegramID, email }) => {
             };
         } else return false;
     } catch (e) {
-        console.error(e);
+        console.error("error in setEmailAndUpdate", e);
         return false;
     }
 };
@@ -326,7 +321,7 @@ let removeEmailandUpdate = async ({ telegramID }) => {
     console.log(curentTime(), "resetEmailandUpdate", telegramID);
 
     try {
-        let user = await UsersModel
+        let user = await UserModel
             .findOne({
                 telegramID,
             })
@@ -350,10 +345,10 @@ let removeEmailandUpdate = async ({ telegramID }) => {
 
 let handleNewUserJoinGroup = async ({ telegramID, fullName }) => {
     try {
-        let user = await UsersModel.findOne({ telegramID }).exec();
+        let user = await UserModel.findOne({ telegramID }).exec();
         if (!user) {
             console.log(curentTime(7), fullName, telegramID, "not found in db");
-            // user = new UsersModel({
+            // user = new UserModel({
             //     telegramID,
             //     fullName,
             //     joinDate: Date.now(),
@@ -381,7 +376,7 @@ let handleNewUserJoinGroup = async ({ telegramID, fullName }) => {
 
 let handleUserWebhook = async ({ id, event }) => {
     try {
-        let user = await UsersModel
+        let user = await UserModel
             .findOne({
                 "webminar.registrant_id": id,
             })
@@ -435,7 +430,7 @@ let handleUserWebhook = async ({ id, event }) => {
 let botRemindReset = async ({ event }) => {
     try {
         if (event === "beforeHourReset") {
-            await UsersModel
+            await UserModel
                 .updateMany(
                     {},
                     {
@@ -447,7 +442,7 @@ let botRemindReset = async ({ event }) => {
                 .exec();
         }
         if (event === "beforeDayReset") {
-            await UsersModel
+            await UserModel
                 .updateMany(
                     {},
                     {

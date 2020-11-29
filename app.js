@@ -8,6 +8,8 @@ let mongoose = require("mongoose")
 let LocalStrategy = require("passport-local").Strategy;
 var cookieSession = require("cookie-session");
 var sparkles = require("sparkles")();
+const chalk = require("chalk");
+
 require("./js/Models/dashboard")
 require("./js/Models/users")
 require("./js/datebase").connect();
@@ -20,10 +22,9 @@ let group_id,
     group_invite_link = null,
     bot_username = null;
 
-let { getStatstics } = require("./controllers/userControllers");
 let DashboardModel = mongoose.model("DashboardModel")
-let UsersModel = mongoose.model("DashboardModel")
-const chalk = require("chalk");
+let UserModel = mongoose.model("UserModel")
+let { getStatstics } = require("./controllers/userControllers");
 
 let curentTime = () => {
     return new moment().utcOffset(7).format("YYYY/MM/DD HH:mm:ss Z");
@@ -131,9 +132,7 @@ sparkles.on("init", async () => {
     }
 });
 
-setTimeout(() => {
-    sparkles.emit("init");
-}, 1000);
+
 
 app.use(function (req, res, next) {
     res.status(400).send("new feature is being buiding, please patience wait");
@@ -141,11 +140,7 @@ app.use(function (req, res, next) {
 
 app.use(function (err, req, res, next) {
     console.error(curentTime(), err);
-    res.status(err.status || 500);
-    res.send("new feature is being buiding, please patience wait");
-    return;
-    // res.locals.message = err.message;
-    // res.locals.error = req.app.get('env') === 'development' ? err : {};
+    return res.status(500).send("new feature is being buiding, please patience wait");
 });
 
 sparkles.on("userOnline", ({ userOnline }) => {
@@ -230,7 +225,7 @@ async function handleStatisticsGetAll({ payload }) {
     let { tableId } = payload;
     let listUsers = null;
     try {
-        listUsers = await UsersModel
+        listUsers = await UserModel
             .find(
                 {
                     "registerFollow.passAll": true,
@@ -310,7 +305,6 @@ function onError(error) {
         throw error;
     }
     var bind = port.toString();
-
 
     switch (error.code) {
         case "EACCES":

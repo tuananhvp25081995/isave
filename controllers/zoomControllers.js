@@ -3,13 +3,15 @@ var qs = require("qs");
 var TinyURL = require("tinyurl");
 let mongoose = require("mongoose")
 let DashboardModel = mongoose.model("DashboardModel")
-let UsersModel = mongoose.model("DashboardModel")
+let UserModel = mongoose.model("UserModel")
 let { create } = require("apisauce");
 let moment = require("moment");
 let sparkles = require("sparkles")();
 let chalk = require("chalk");
+let { v4 } = require("uuid");
 
 let webinarId = null;
+let domain = null;
 let lastRefresh = Date.now();
 
 
@@ -23,6 +25,7 @@ sparkles.on("config_change", async () => {
     try {
         let config = await DashboardModel.findOne({ config: 1 });
         webinarId = config.webinarId;
+        domain = config.domain
         console.log(curentTime(7), "config updated in zoomControllers.js");
     } catch (e) {
         console.error("update config have error", e);
@@ -186,7 +189,7 @@ async function refreshToken() {
 
 let getOrCreateRegistrants = async ({ telegramID }) => {
     try {
-        let user = await UsersModel.findOne({ telegramID }).exec();
+        let user = await UserModel.findOne({ telegramID }).exec();
 
         if (user) {
             if (
@@ -199,21 +202,13 @@ let getOrCreateRegistrants = async ({ telegramID }) => {
                 );
                 return {
                     result: true,
-                    join_url: user.webminar.join_url,
+                    join_url: `${domain}/join?id=${user.webminar.shortLink}`,
                     start_time: user.webminar.start_time,
                 };
             } else {
                 if (user.webminar.id !== webinarId) {
-                    console.log(
-                        curentTime(),
-                        "this user have old webminarid, so create new and replace"
-                    );
-                } else
-                    console.log(
-                        curentTime(),
-                        "this user haven't invite link, so create it"
-                    );
-
+                    console.log(curentTime(), "this user have old webminarid, so create new and replace");
+                } else console.log(curentTime(), "this user haven't invite link, so create it");
                 let createRegistrantsBack = await createRegistrants({
                     email: user.mail.email,
                     first_name: user.fullName,
@@ -221,7 +216,6 @@ let getOrCreateRegistrants = async ({ telegramID }) => {
                 });
 
                 if (createRegistrantsBack.result) return createRegistrantsBack;
-
                 return { result: false };
             }
         } else {
@@ -258,8 +252,6 @@ let createRegistrants = async (data) => {
             ],
         });
 
-        // console.log(dataToSend)
-
         var axios_config = {
             method: "post",
             url:
@@ -272,7 +264,7 @@ let createRegistrants = async (data) => {
         };
 
         try {
-            let oneUser = await UsersModel
+            let oneUser = await UserModel
                 .findOne({ telegramID: telegramID })
                 .exec();
 
@@ -289,11 +281,13 @@ let createRegistrants = async (data) => {
             if (t.status === 201) {
                 let { registrant_id, id, topic, start_time, join_url } = t.data;
 
-                let newurl = await TinyURL.shorten(join_url);
+                // let newurl = await TinyURL.shorten(join_url);
                 // console.log(newurl);
+                let short = v4().toString().slice(0, 8)
                 oneUser.webminar = {
                     id,
-                    join_url: newurl,
+                    join_url,
+                    shortLink: short,
                     registrant_id,
                     start_time,
                     topic,
@@ -301,16 +295,10 @@ let createRegistrants = async (data) => {
                 };
 
                 await oneUser.save();
-                return { result: true, ...oneUser.webminar };
+                return { result: true, join_url: `${domain}/join?id=${short}`, start_time };
             }
         } catch (e) {
-            console.error(curentTime(), e);
-            console.log(
-                curentTime(),
-                "createRegistrants failed with code:",
-                e.response.status
-            );
-            console.error(e.response.data);
+            console.log(curentTime(), "createRegistrants failed with code:", "data", e.response.status, e.response.data);
 
             if (
                 e.response.status === 401 &&

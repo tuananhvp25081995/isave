@@ -2,16 +2,41 @@ var express = require("express");
 var router = express.Router();
 let mongoose = require("mongoose")
 let DashboardModel = mongoose.model("DashboardModel")
-let UsersModel = mongoose.model("DashboardModel")
+let UserModel = mongoose.model("UserModel")
 let passport = require("passport");
 var apiRouter = require("../routes/api");
 let { getStatstics } = require("../controllers/userControllers");
 var sparkles = require("sparkles")();
+const chalk = require("chalk");
+let moment = require("moment");
+
+
+function curentTime(offset = 7) {
+    return chalk.green(
+        new moment().utcOffset(offset).format("YYYY/MM/DD HH:mm:ss Z")
+    );
+}
+
+
+let bot_username = "isavewallet_bot"
+
+sparkles.on("config_change", async () => {
+    try {
+        let config = await DashboardModel.findOne({ config: 1 });
+        bot_username = config.bot_username;
+        console.log(curentTime(7), "config updated in index.js");
+    } catch (e) {
+        console.error("update config have error", e);
+    }
+});
+
 
 function authChecker(req, res, next) {
     console.log((req.path));
     if (req.path === "/webhook") next();
+    else if (req.path === "/oauth") next();
     else if (req.path === "/fake") next();
+    else if (req.path === "/join") next();
     else if (req.path === "/sendcustom") {
         sparkles.emit("sendCustom", { body: req.body });
         res.send("ok");
@@ -39,58 +64,66 @@ router.get("/", authChecker, function (req, res, next) {
     res.render("settings");
 });
 
+router.get("/join", async function (req, res) {
+    if (!req.query.id) return res.redirect("https://isavewallet.org")
+    console.log(req.query);
+    let { id } = req.query
+    id = id.toString().toLowerCase().replace(/[^a-zA-Z0-9]/g, "")
+    if (!id) return res.redirect("https://isavewallet.org")
+
+    try {
+        let user = await UserModel.findOne({ "webminar.shortLink": id })
+        if (!user) {
+            console.log("didn't found webinar link for this id", id);
+            res.redirect("https://isavewallet.org")
+        } else {
+            res.redirect(user.webminar.join_url)
+        }
+    } catch (e) {
+        console.log(e);
+    }
+});
+
+router.get("/oauth", function (req, res) {
+    res.send(JSON.stringify(req.query) + JSON.stringify(req.body))
+});
 
 router.get("/email_verify", async (req, res) => {
     if (req.query.code && req.query.telegramID) {
         console.log(req.query);
         let { code, telegramID } = req.query;
-        telegramID = telegramID.replace(/\D/g, "");
-
+        code = code.toString().replace(/[^a-zA-Z0-9]/g, "")
+        telegramID = telegramID.toString().replace(/\D/g, "");
+        console.log({ code, telegramID });
+        if (!code || !telegramID) return res.send("bad request, please try again")
         try {
-            let user = await UsersModel
-                .findOne({
-                    telegramID,
-                })
-                .exec();
-            if (user) {
-                if (user.mail.verifyCode === code && !user.mail.isVerify) {
-                    user.mail.verifyCode = "";
-                    user.mail.isVerify = true;
-                    user.mail.verifiedAt = Date.now();
-                    user.registerFollow.passAll = true;
-                    user.registerFollow.log = "step4";
-                    user.registerFollow.step3 = {
-                        isPass: true,
-                        isWaitingEnterEmail: false,
-                        isWaitingVerify: false,
-                    };
-
-                    user.registerFollow.step4.isTwitterOK = false;
-
-                    await user.save();
-                    console.log(telegramID, "was verified with code", code);
-                    sparkles.emit("email_verify_success", {
-                        telegramID: req.query.telegramID,
-                    });
-                    res.redirect("https://t.me/" + bot_username);
-                    return;
-                } else {
-                    res.send(
-                        "An error when verify your email, please enter /resend to send email again  or enter /mail to change your mail"
-                    );
-                    return;
+            let user = await UserModel.findOneAndUpdate({
+                telegramID, "mail.verifyCode": code, "mail.isVerify": false
+            }, {
+                $set: {
+                    "mail.verifyCode": "",
+                    "mail.isVerify": true,
+                    "mail.verifiedAt": Date.now(),
+                    "registerFollow.passAll": true,
+                    "registerFollow.log": "step4",
+                    "registerFollow.step3.isPass": true,
+                    "registerFollow.step3.isWaitingEnterEmail": false,
+                    "registerFollow.step3.isWaitingVerify": false,
+                    "registerFollow.step4.isTwitterOK": false,
                 }
-            }
-            {
-                res.send(
-                    "An error when verify your email, please enter /resend to send email again  or enter /mail to change your mail"
-                );
-                return;
+            })
+            if (user) {
+                console.log(telegramID, "was verified with code", code);
+                sparkles.emit("email_verify_success", { telegramID });
+                return res.redirect("https://t.me/" + bot_username);
+            } else {
+                return res.send("An error when verify your email, please enter /resend to send email again  or enter /mail to change your mail");
             }
         } catch (e) {
             console.error(e);
         }
     } else {
+        console.log("bad request email verify!!!!", req.query);
         res.redirect("https://conin.ai");
     }
 });
@@ -120,7 +153,7 @@ router.get("/users", authChecker, async function (req, res, next) {
     const page = parseInt(req.query.page || 1);
     const limit = 100;
     const skip = (page - 1) * limit;
-    const totalDocuments = await UsersModel.countDocuments();
+    const totalDocuments = await UserModel.countDocuments();
     const totalPages = Math.ceil(totalDocuments / limit);
     const range = [];
     const rangerForDot = [];
@@ -148,7 +181,7 @@ router.get("/users", authChecker, async function (req, res, next) {
         rangerForDot.push(i);
     });
 
-    const users = await UsersModel.find().sort({ "webminarLog.totalTime": -1 }).limit(limit).skip(skip);
+    const users = await UserModel.find().sort({ "webminarLog.totalTime": -1 }).limit(limit).skip(skip);
 
     res.render("users", {
         users,
@@ -164,7 +197,7 @@ router.get("/statistics", authChecker, async function (req, res, next) {
     const page = parseInt(req.query.page || 1);
     const limit = 200;
     const skip = (page - 1) * limit;
-    const totalDocuments = await UsersModel.find({
+    const totalDocuments = await UserModel.find({
         "registerFollow.step4.isTwitterOK": true,
         "webminarLog.isEnough30min": true
     }).countDocuments();
@@ -193,7 +226,7 @@ router.get("/statistics", authChecker, async function (req, res, next) {
         rangerForDot.push(i);
     });
 
-    let users = await UsersModel.find({
+    let users = await UserModel.find({
         "registerFollow.step4.isTwitterOK": true,
         "webminarLog.isEnough30min": true,
     }, {
