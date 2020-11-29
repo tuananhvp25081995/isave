@@ -69,40 +69,40 @@ router.get("/getalluser", async function (req, res, next) {
     }
 });
 
-router.post("/fake", async (req, res) => {
-    let a = [];
-    let c = 0;
-    for (let i = 0; i <= 50000; i++) {
-        let one = {
-            telegramID: i.toString(),
-            fullName: faker.name.findName(),
-            mail: {
-                email: faker.internet.email(),
-                isVerify: faker.random.boolean(),
-            },
-            inviteLogsCount: faker.random.number(2000),
-            refTelegramID: faker.random.number(20234500),
-            registerFollow: {
-                passAll: faker.random.boolean()
-            },
-            joinDate: moment(Date.now()).format("YYYY/MM/DD h:mm:ss a"),
-            totalTime: (Math.round(234891275 / 1000) / 60).toFixed(1) + " min",
-            webminarLog: {
-                isEnough30min: faker.random.boolean(),
-            }
-        };
-        a.push(one);
-        if (c > 10000 || i === 100000) {
-            c = 0;
-            await UserModel.insertMany(a);
-            a = []
-        }
-        c++;
-        console.log("save", i);
-    }
+// router.post("/fake", async (req, res) => {
+//     let a = [];
+//     let c = 0;
+//     for (let i = 0; i <= 50000; i++) {
+//         let one = {
+//             telegramID: i.toString(),
+//             fullName: faker.name.findName(),
+//             mail: {
+//                 email: faker.internet.email(),
+//                 isVerify: faker.random.boolean(),
+//             },
+//             inviteLogsCount: faker.random.number(2000),
+//             refTelegramID: faker.random.number(20234500),
+//             registerFollow: {
+//                 passAll: faker.random.boolean()
+//             },
+//             joinDate: moment(Date.now()).format("YYYY/MM/DD h:mm:ss a"),
+//             totalTime: (Math.round(234891275 / 1000) / 60).toFixed(1) + " min",
+//             webminarLog: {
+//                 isEnough30min: faker.random.boolean(),
+//             }
+//         };
+//         a.push(one);
+//         if (c > 10000 || i === 100000) {
+//             c = 0;
+//             await UserModel.insertMany(a);
+//             a = []
+//         }
+//         c++;
+//         console.log("save", i);
+//     }
 
-    res.send("ok");
-})
+//     res.send("ok");
+// })
 
 router.get("/config", async function (req, res, next) {
     try {
@@ -229,13 +229,13 @@ router.post("/botconfig", async (req, res) => {
 router.get("/botremind", async function (req, res) {
     try {
         let config = await DashboardModel.findOne({ config: 1 });
-        let totalUser = await UserModel.find({ "registerFollow.step4.isTwitterOK": true, "webminarLog.isEnough30min": true }).countDocuments().exec();
+        let totalUser = await UserModel.find({ "social.telegram.isBlock": false, "webminar.join_url": { $ne: "" } }).countDocuments().exec();
         let beforeHourCount = await UserModel
-            .find({ "remind.isBeforeHour": true, "webminarLog.isEnough30min": true })
+            .find({ "remind.isBeforeHour": true, "social.telegram.isBlock": false })
             .countDocuments()
             .exec();
         let beforeDayCount = await UserModel
-            .find({ "remind.isBeforeDay": true })
+            .find({ "remind.isBeforeDay": true, "social.telegram.isBlock": false })
             .countDocuments()
             .exec();
 
@@ -256,8 +256,8 @@ router.get("/botremind", async function (req, res) {
                     beforeHourCount.toString() + "/" + totalUser.toString(),
                 beforeDay: config.remind.beforeDay,
                 beforeDayCount:
-                    // beforeDayCount.toString() + "/" + totalUser.toString(),
-                    beforeDayCount.toString() + "/" + (await UserModel.find({ "webminarLog.totalTime": { $gte: 1, $lt: 1800000 } }).countDocuments().exec()).toString(),
+                    beforeDayCount.toString() + "/" + totalUser.toString(),
+                // beforeDayCount.toString() + "/" + (await UserModel.find({ "webminarLog.totalTime": { $gte: 1, $lt: 1800000 } }).countDocuments().exec()).toString(),
                 day: remind.day,
                 hour: remind.hour,
             },

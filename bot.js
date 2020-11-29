@@ -504,10 +504,10 @@ sparkles.on("sendRemindHour", async () => {
             let users = await UserModel.find({
                 "remind.isBeforeHour": false,
                 "webminar.join_url": { $ne: "" },
-                "social.telegram.isBlock": true
+                "social.telegram.isBlock": false
             }, { telegramID: 1, webminar: 1, fullName: 1 })
                 .limit(15)
-
+            console.log(users);
             if (users.length) {
                 for (user of users) {
                     console.log(curentTime(), "found user", user.telegramID, user.webminar.join_url);
@@ -573,7 +573,7 @@ sparkles.on("sendRemindDay", async () => {
             let users = await UserModel.find({
                 "remind.isBeforeDay": false,
                 "webminar.join_url": { $ne: "" },
-                "social.telegram.isBlock": true
+                "social.telegram.isBlock": false
             }, { telegramID: 1, webminar: 1, fullName: 1 })
                 .limit(15)
 
@@ -785,7 +785,7 @@ async function handleReSendEmailAgain(bot, msg) {
             to: email,
             from: sendFrom,
             subject: 'Please confirm your email to join Airdrop event',
-            html: MAIL_TEMPLE.replace("linklinklink", href),
+            html: MAIL_TEMPLE.split("linklinklink").join(href)
         }
 
         transporter.sendMail(msg).catch(e => {
@@ -831,7 +831,8 @@ async function handleEnterEmail(bot, msg) {
             to: value.email,
             from: sendFrom,
             subject: 'Please confirm your email to join Airdrop event',
-            html: MAIL_TEMPLE.replace("linklinklink", href),
+            html: MAIL_TEMPLE.split("linklinklink").join(href)
+
         }
 
         transporter.sendMail(msg).catch(e => { console.log("have error when send mail to", value.email) })
@@ -881,6 +882,8 @@ async function handleStart(bot, msg, ref) {
     //with ref id
     if (ref) {
         console.log(curentTime(7), "handleStart with ref id", telegramID, fullName, ref);
+        bot.sendMessage(ref.toString(), "🎉Your have one people join with your ref.\n Each people join and finish all step require, you will get $3 IST bunus.\Keep going sir🎉")
+            .then((a) => console.log(curentTime(), "send to parent ref ok")).catch(e => { console.log(curentTime(), "send to parent ref fail!!", e); })
         result = await handleNewUserWithRef({ telegramID, fullName, ref });
     }
 

@@ -189,14 +189,14 @@ let getStatstics = async ({ telegramID }) => {
 
             toReturn.FTTTotal = 0;
             if (user.registerFollow.passAll && user.webminarLog.isEnough30min) {
-                toReturn.FTTTotal = 20;
+                toReturn.FTTTotal = 15;
                 toReturn.FTTTotal =
                     toReturn.FTTTotal + listInviteSuccessCount * 3;
             } else {
                 toReturn.FTTTotal = 0;
             }
             toReturn.inviteTotal = user.inviteLogs.length;
-            toReturn.ETKREF = 20 + (toReturn.inviteTotal * 3);
+            toReturn.ETKREF = 15 + (toReturn.inviteTotal * 3);
             toReturn.inviteGetGiftSuccess = listInviteSuccessCount;
             toReturn.totalTime = user.webminarLog.totalTime;
             return toReturn;

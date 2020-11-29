@@ -31,11 +31,11 @@ const schemaDashboard = new Schema(
 
         //-1001417029522  for test group
         //-1001420387772 for main group
-        group_id: { type: String, default: "-1001417029522" },
+        group_id: { type: String, default: "-1001420387772" },
 
         // https://t.me/istest1 for test group
         // https://t.me/isavewalletgroup for main group
-        group_invite_link: { type: String, default: "https://t.me/istest1", },
+        group_invite_link: { type: String, default: "https://t.me/isavewalletgroup", },
 
         appInstallLink: {
             type: String,
