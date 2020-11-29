@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 let { v4 } = require("uuid");
-let { UsersModel } = require("../js/Models/users");
+let DashboardModel = mongoose.model("DashboardModel")
+let UsersModel = mongoose.model("DashboardModel")
 let moment = require("moment");
 
 function curentTime(offset = 7) {

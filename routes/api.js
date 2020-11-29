@@ -1,13 +1,14 @@
 var express = require("express");
 var router = express.Router();
-let { DashboardModel } = require("../js/Models/dashboard");
+let mongoose = require("mongoose")
+let DashboardModel = mongoose.model("DashboardModel")
+let UsersModel = mongoose.model("DashboardModel")
 var sparkles = require("sparkles")();
 let { handleOauthRedirectUri } = require("../controllers/zoomControllers");
 let {
     handleUserWebhook,
     botRemindReset,
 } = require("../controllers/userControllers");
-const { UsersModel } = require("../js/Models/users");
 let moment = require("moment");
 const chalk = require("chalk");
 

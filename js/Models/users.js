@@ -1,7 +1,7 @@
-const mongoose = require("mongoose");
-const Schema = mongoose.Schema;
+let mongoose = require("mongoose");
+let Schema = mongoose.Schema;
 
-const schemaUsers = new Schema(
+let schemaUsers = new Schema(
     {
         telegramID: { type: String, required: true },
         fullName: { type: String, default: "" },
@@ -112,6 +112,6 @@ const schemaUsers = new Schema(
         versionKey: false,
     }
 );
+console.log("loaded UserModel");
 
-module.exports.UsersModel =
-    mongoose.models.UsersModel || mongoose.model("UserModel", schemaUsers, "users");
+mongoose.model("UserModel", schemaUsers, "users")

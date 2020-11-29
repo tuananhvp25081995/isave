@@ -1,14 +1,18 @@
 const axios = require("axios").default;
 var qs = require("qs");
 var TinyURL = require("tinyurl");
-let { DashboardModel } = require("../js/Models/dashboard");
-const { UsersModel } = require("../js/Models/users");
-let lastRefresh = Date.now();
+let mongoose = require("mongoose")
+let DashboardModel = mongoose.model("DashboardModel")
+let UsersModel = mongoose.model("DashboardModel")
 let { create } = require("apisauce");
 let moment = require("moment");
 let sparkles = require("sparkles")();
-const chalk = require("chalk");
+let chalk = require("chalk");
+
 let webinarId = null;
+let lastRefresh = Date.now();
+
+
 
 function curentTime(offset = "+0000") {
     return chalk.green(

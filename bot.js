@@ -3,17 +3,14 @@ const TelegramBot = require("node-telegram-bot-api");
 var faker = require("faker");
 let moment = require("moment");
 const Joi = require("joi");
-let { UsersModel } = require("./js/Models/users");
-let { DashboardModel } = require("./js/Models/dashboard");
-var sparkles = require("sparkles")();
-var nodemailer = require("nodemailer");
-var WAValidator = require('wallet-address-validator');
-var parse = require('url-parse');
-let beforeHour = null;
-let beforeDay = null;
-
+let mongoose = require("mongoose")
+let DashboardModel = mongoose.model("DashboardModel")
+let UsersModel = mongoose.model("DashboardModel")
+let sparkles = require("sparkles")();
+let nodemailer = require("nodemailer");
+let WAValidator = require('wallet-address-validator');
+let parse = require('url-parse');
 const chalk = require("chalk");
-
 let {
     handleNewUserNoRef,
     handleNewUserWithRef,
@@ -23,12 +20,15 @@ let {
     removeEmailandUpdate,
     getStatstics,
 } = require("./controllers/userControllers");
-
 let {
     getOrCreateRegistrants,
 } = require("./controllers/zoomControllers");
 
 const { MAIL_TEMPLE } = require("./js/define");
+
+let beforeHour = null;
+let beforeDay = null;
+
 
 
 let bot = new TelegramBot(process.env.BOT_TOKEN, { polling: true, });

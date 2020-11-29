@@ -1,9 +1,10 @@
 var express = require("express");
 var router = express.Router();
-let { DashboardModel } = require("../js/Models/dashboard");
+let mongoose = require("mongoose")
+let DashboardModel = mongoose.model("DashboardModel")
+let UsersModel = mongoose.model("DashboardModel")
 let passport = require("passport");
 var apiRouter = require("../routes/api");
-const { UsersModel } = require("../js/Models/users");
 let { getStatstics } = require("../controllers/userControllers");
 var sparkles = require("sparkles")();
 
@@ -37,6 +38,63 @@ router.use("/api", authChecker, apiRouter);
 router.get("/", authChecker, function (req, res, next) {
     res.render("settings");
 });
+
+
+router.get("/email_verify", async (req, res) => {
+    if (req.query.code && req.query.telegramID) {
+        console.log(req.query);
+        let { code, telegramID } = req.query;
+        telegramID = telegramID.replace(/\D/g, "");
+
+        try {
+            let user = await UsersModel
+                .findOne({
+                    telegramID,
+                })
+                .exec();
+            if (user) {
+                if (user.mail.verifyCode === code && !user.mail.isVerify) {
+                    user.mail.verifyCode = "";
+                    user.mail.isVerify = true;
+                    user.mail.verifiedAt = Date.now();
+                    user.registerFollow.passAll = true;
+                    user.registerFollow.log = "step4";
+                    user.registerFollow.step3 = {
+                        isPass: true,
+                        isWaitingEnterEmail: false,
+                        isWaitingVerify: false,
+                    };
+
+                    user.registerFollow.step4.isTwitterOK = false;
+
+                    await user.save();
+                    console.log(telegramID, "was verified with code", code);
+                    sparkles.emit("email_verify_success", {
+                        telegramID: req.query.telegramID,
+                    });
+                    res.redirect("https://t.me/" + bot_username);
+                    return;
+                } else {
+                    res.send(
+                        "An error when verify your email, please enter /resend to send email again  or enter /mail to change your mail"
+                    );
+                    return;
+                }
+            }
+            {
+                res.send(
+                    "An error when verify your email, please enter /resend to send email again  or enter /mail to change your mail"
+                );
+                return;
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    } else {
+        res.redirect("https://conin.ai");
+    }
+});
+
 router.get("/login", function (req, res, next) {
     res.render("login");
 });

@@ -2,29 +2,32 @@ var express = require("express");
 var path = require("path");
 var cookieParser = require("cookie-parser");
 var logger = require("morgan");
-var indexRouter = require("./routes/index");
 let moment = require("moment");
 let passport = require("passport");
+let mongoose = require("mongoose")
 let LocalStrategy = require("passport-local").Strategy;
 var cookieSession = require("cookie-session");
-let fs = require("fs");
-require("./js/datebase").connect();
-require("./bot");
 var sparkles = require("sparkles")();
+require("./js/Models/dashboard")
+require("./js/Models/users")
+require("./js/datebase").connect();
 
+
+let indexRouter = require("./routes/index");
+
+require("./bot");
 let group_id,
     group_invite_link = null,
     bot_username = null;
 
 let { getStatstics } = require("./controllers/userControllers");
-let { UsersModel } = require("./js/Models/users");
-let { DashboardModel } = require("./js/Models/dashboard");
+let DashboardModel = mongoose.model("DashboardModel")
+let UsersModel = mongoose.model("DashboardModel")
 const chalk = require("chalk");
 
-function curentTime() {
+let curentTime = () => {
     return new moment().utcOffset(7).format("YYYY/MM/DD HH:mm:ss Z");
 }
-
 
 sparkles.on("config_change", async () => {
     try {
@@ -51,7 +54,7 @@ app.use(
     logger(
         ":datee :method :url :status :response-time ms - :res[content-length]",
         {
-            skip: (req, res) => {
+            skip: (req) => {
                 if (
                     req.path.startsWith("/assets") ||
                     req.path.startsWith("/js") ||
@@ -65,11 +68,7 @@ app.use(
 );
 
 app.use(express.json());
-app.use(
-    express.urlencoded({
-        extended: false,
-    })
-);
+app.use(express.urlencoded({ extended: true, }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 
@@ -105,72 +104,15 @@ passport.use(
     })
 );
 
-app.use(
-    cookieSession({
-        secret: "dc@#@#$%,34554%#$__434#et1234!@#",
-        signed: true,
-    })
-);
-
+app.use(cookieSession({ secret: "dc@#@#$%,34554%#$__434#et1234!@#", signed: true, }));
 app.use(passport.initialize());
 app.use(passport.session());
 
+
+
+
 app.use("/", indexRouter);
 
-app.get("/email_verify", async (req, res) => {
-    if (req.query.code && req.query.telegramID) {
-        console.log(req.query);
-        let { code, telegramID } = req.query;
-        telegramID = telegramID.replace(/\D/g, "");
-
-        try {
-            let user = await UsersModel
-                .findOne({
-                    telegramID,
-                })
-                .exec();
-            if (user) {
-                if (user.mail.verifyCode === code && !user.mail.isVerify) {
-                    user.mail.verifyCode = "";
-                    user.mail.isVerify = true;
-                    user.mail.verifiedAt = Date.now();
-                    user.registerFollow.passAll = true;
-                    user.registerFollow.log = "step4";
-                    user.registerFollow.step3 = {
-                        isPass: true,
-                        isWaitingEnterEmail: false,
-                        isWaitingVerify: false,
-                    };
-
-                    user.registerFollow.step4.isTwitterOK = false;
-
-                    await user.save();
-                    console.log(telegramID, "was verified with code", code);
-                    sparkles.emit("email_verify_success", {
-                        telegramID: req.query.telegramID,
-                    });
-                    res.redirect("https://t.me/" + bot_username);
-                    return;
-                } else {
-                    res.send(
-                        "An error when verify your email, please enter /resend to send email again  or enter /mail to change your mail"
-                    );
-                    return;
-                }
-            }
-            {
-                res.send(
-                    "An error when verify your email, please enter /resend to send email again  or enter /mail to change your mail"
-                );
-                return;
-            }
-        } catch (e) {
-            console.error(e);
-        }
-    } else {
-        res.redirect("https://conin.ai");
-    }
-});
 
 sparkles.on("init", async () => {
     try {
@@ -219,10 +161,6 @@ sparkles.on("totalUsers", ({ totalUsers }) => {
     });
 });
 
-let options = {
-    key: fs.readFileSync("/root/thanhdatpd/key.key"),
-    cert: fs.readFileSync("/root/thanhdatpd/key.pem")
-}
 
 // var server = require("https").createServer(options, app);
 var server = require("http").createServer(app);

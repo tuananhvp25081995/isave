@@ -5,7 +5,7 @@ const schemaDashboard = new Schema(
     {
         config: { type: Number, default: 1 },
         username: { type: String, default: "admin" },
-        password: { type: String, default: "Liecoin!" },
+        password: { type: String, default: "hi" },
 
         token: {
             access_token: { type: String, default: "" },
@@ -77,10 +77,8 @@ const schemaDashboard = new Schema(
         versionKey: false,
     }
 );
-
-module.exports.DashboardModel =
-    mongoose.models.DashboardModel ||
-    mongoose.model("dashboard", schemaDashboard);
+console.log("loaded DashboardModel");
+mongoose.model("DashboardModel", schemaDashboard, "dashboard");
 
 // /**
 // * Paste one or more documents here
