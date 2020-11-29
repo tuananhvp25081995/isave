@@ -16,6 +16,9 @@ let schemaUsers = new Schema(
 
         social: {
             twitter: { type: String, default: "" },
+            telegram: {
+                isBlock: { type: Boolean, default: false }
+            }
         },
 
         wallet: {

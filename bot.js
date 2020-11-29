@@ -489,7 +489,7 @@ let handleLeftChatMember = async (bot, msg) => {
     }
 };
 
-
+//this send for user register ok, have link to join zoom metting
 let sendRemindHour_doing = false;
 sparkles.on("sendRemindHour", async () => {
     console.log(curentTime(), "on sendRemindHour");
@@ -501,80 +501,41 @@ sparkles.on("sendRemindHour", async () => {
                 return;
             }
             sendRemindHour_doing = true;
-            let users = await UserModel
-                .find(
-                    {
-                        "remind.isBeforeHour": false,
-                        "registerFollow.step4.isTwitterOK": true,
-                        "webminarLog.isEnough30min": true,
-
-                        // "webminar.join_url": {$ne : ""}
-                    },
-                    { telegramID: 1, webminar: 1, fullName: 1 }
-                )
+            let users = await UserModel.find({
+                "remind.isBeforeHour": false,
+                "webminar.join_url": { $ne: "" },
+                "social.telegram.isBlock": true
+            }, { telegramID: 1, webminar: 1, fullName: 1 })
                 .limit(15)
-                .exec();
 
             if (users.length) {
-                // console.log(users);
-                for (let i = 0; i < users.length; i++) {
-                    let join_url = null;
-
-                    //temporary disable webiminar link
-                    // if (users[i].webminar.join_url === "" || users[i].webminar.id.toString() !== CONFIG_webinarId.toString()) {
-                    //     console.log(
-                    //         curentTime(),
-                    //         "this user have't join_url or have old webinarId, so create new join_url"
-                    //     );
-                    //     let getOrCreateRegistrantsBack = await getOrCreateRegistrants(
-                    //         { telegramID: users[i].telegramID }
-                    //     );
-                    //     if (getOrCreateRegistrantsBack.result)
-                    //         join_url = getOrCreateRegistrantsBack.join_url;
-                    // } else join_url = users[i].webminar.join_url;
-
-                    console.log(
-                        curentTime(),
-                        "found user",
-                        users[i].telegramID,
-                        users[i].webminar.join_url
-                    );
-
-
+                for (user of users) {
+                    console.log(curentTime(), "found user", user.telegramID, user.webminar.join_url);
                     // let toSend = BOT_BEFORE_HOUR.toString().replace("EVENTLINK", users[i].webminar.join_url);
                     let toSend = BOT_BEFORE_HOUR.toString().split("\\n").join("\n");
-                    toSend = toSend.replace("USERNAME", `[${users[i].fullName}](tg://user?id=${users[i].telegramID})`);
+                    toSend = toSend.replace("USERNAME", `[${user.fullName}](tg://user?id=${user.telegramID})`);
 
+                    UserModel.updateOne({ telegramID: user.telegramID }, { $set: { "remind.isBeforeHour": true } })
+                        .catch(e => console.log(e))
 
-                    try {
-                        await bot.sendMessage(
-                            users[i].telegramID,
-                            toSend,
-                            {
-                                disable_web_page_preview: true,
-                                parse_mode: "Markdown",
-                                reply_markup: reply_markup_keyboard
-                            }
-                        );
-                    } catch (e) {
-                        console.log("this user block bot", users[i].telegramID);
-                    }
-
-                    await UserModel
-                        .findOneAndUpdate(
-                            { telegramID: users[i].telegramID },
-                            { $set: { "remind.isBeforeHour": true } },
-                            { useFindAndModify: false }
-                        )
-                        .exec();
+                    bot.sendMessage(
+                        user.telegramID,
+                        toSend,
+                        {
+                            disable_web_page_preview: true,
+                            parse_mode: "Markdown",
+                            reply_markup: reply_markup_keyboard
+                        }
+                    ).then(ok => { console.log("send ok"); }).catch(e => {
+                        console.log("this user block bot", user.telegramID);
+                        UserModel.updateOne({ telegramID: user.telegramID }, { $set: { "social.telegram.isBlock": true } })
+                            .catch(e => console.log(e))
+                    })
                 }
                 sendRemindHour_doing = false;
             } else {
                 sparkles.emit("remind", { type: "hour", status: "stoped" });
-                console.log(
-                    curentTime(),
-                    "no user left, clear sendRemindHour interval"
-                );
+                console.log(curentTime(), "no user left, clear sendRemindHour interval");
                 clearInterval(beforeHour);
                 beforeHour = null;
                 sendRemindHour_doing = false;
@@ -584,7 +545,7 @@ sparkles.on("sendRemindHour", async () => {
             sendRemindHour_doing = false;
             sparkles.emit("remind", { type: "hour", status: "error" });
         }
-    }, 1000);
+    }, 2000);
 });
 
 sparkles.on("sendRemindHour_Cancel", async () => {
@@ -595,83 +556,68 @@ sparkles.on("sendRemindHour_Cancel", async () => {
     sparkles.emit("remind", { type: "hour", status: "stoped" });
 });
 
+
+
 let sendRemindDay_doing = false;
 
-
-//test send bulk message;
-
-let sendMessageAsync = async ({ telegramID }) => {
-    let user = await UserModel.findOne({ telegramID }, { telegramID: 1, fullName: 1 }).exec();
-
-    if (user) {
-        sparkles.emit("remind", { type: "day", status: "sending" });
-
-        console.log(curentTime(), "found user", user.fullName);
-        let toSend = BOT_BEFORE_DAY.toString()
-        toSend = toSend.split("\\n").join("\n");
-
-        bot.sendMessage(telegramID, toSend, { disable_web_page_preview: true }).then(e => {
-            console.log(("sent okkk", telegramID));
-        }).catch(err => {
-            console.error(telegramID, err)
-        }).finally(fn => {
-            UserModel
-                .findOneAndUpdate(
-                    { telegramID: telegramID },
-                    { $set: { "remind.isBeforeDay": true } },
-                    { useFindAndModify: false }
-                )
-                .exec();
-        })
-
-    } else {
-        console.log("not found user in db");
-    }
-}
-
-let sendRemindDay_SET_notSend = null;
-
 sparkles.on("sendRemindDay", async () => {
-    sendRemindDay_SET_notSend = new Set();
-    console.log(curentTime(), "on sendRemindDay for users didn't enough 30min");
-
-    //grab list users didnt sent into sendRemindDay_SET_notSend
-    try {
-        let users = await UserModel
-            .find({
-                "webminarLog.totalTime": { $gte: 1, $lt: 1800000, },
-                "remind.isBeforeDay": false,
-            }, { telegramID: 1 }).exec();
-
-        for (let i = 0; i < users.length; i++) {
-            sendRemindDay_SET_notSend.add(users[i].telegramID);
-            console.log("add", users[i].telegramID, "to set ok");
-
-        }
-
-        console.log(sendRemindDay_SET_notSend);
-    } catch (e) {
-        console.log("error in sendRemindDay_SET_notSend", e);
-    }
-
+    console.log(curentTime(), "on sendRemindDay");
+    sparkles.emit("remind", { type: "day", status: "sending" });
     beforeDay = setInterval(() => {
-        for (let i = 0; i < 20; i++) {
-            let z_iterator = sendRemindDay_SET_notSend.values();
-            let id = z_iterator.next().value;
-            if (!id) {
-                console.log("end of set");
-                console.log(curentTime(), "no user left, clear sendRemindDay interval");
+        try {
+            if (sendRemindDay_doing) {
+                console.log("sendRemindDay_doing is true, skip this tick");
+                return;
+            }
+            sendRemindDay_doing = true;
+            let users = await UserModel.find({
+                "remind.isBeforeDay": false,
+                "webminar.join_url": { $ne: "" },
+                "social.telegram.isBlock": true
+            }, { telegramID: 1, webminar: 1, fullName: 1 })
+                .limit(15)
+
+            if (users.length) {
+                for (user of users) {
+                    console.log(curentTime(), "found user", user.telegramID, user.webminar.join_url);
+                    // let toSend = BOT_BEFORE_HOUR.toString().replace("EVENTLINK", users[i].webminar.join_url);
+                    let toSend = BOT_BEFORE_HOUR.toString().split("\\n").join("\n");
+                    toSend = toSend.replace("USERNAME", `[${user.fullName}](tg://user?id=${user.telegramID})`);
+
+                    UserModel.updateOne({ telegramID: user.telegramID }, { $set: { "remind.isBeforeDay": true } })
+                        .catch(e => console.log(e))
+
+                    bot.sendMessage(
+                        user.telegramID,
+                        toSend,
+                        {
+                            disable_web_page_preview: true,
+                            parse_mode: "Markdown",
+                            reply_markup: reply_markup_keyboard
+                        }
+                    ).then(ok => { console.log("send ok"); }).catch(e => {
+                        console.log("this user block bot", user.telegramID);
+                        UserModel.updateOne({ telegramID: user.telegramID }, { $set: { "social.telegram.isBlock": true } })
+                            .catch(e => console.log(e))
+                    })
+                }
+                sendRemindDay_doing = false;
+            } else {
+                sparkles.emit("remind", { type: "hour", status: "stoped" });
+                console.log(curentTime(), "no user left, clear sendRemindHour interval");
                 clearInterval(beforeDay);
-                beforeDay = null;
-                sparkles.emit("remind", { type: "day", status: "stoped" });
-                break;
-            };
-            sendRemindDay_SET_notSend.delete(id);
-            sendMessageAsync({ telegramID: id })
-            console.log("found id in Set", id)
+                beforeHour = null;
+                sendRemindDay_doing = false;
+            }
+        } catch (e) {
+            console.error(e);
+            clearInterval(beforeDay);
+            sendRemindDay_doing = false;
+            sparkles.emit("remind", { type: "day", status: "error" });
         }
-    }, 1500);
+    }, 2000);
 });
+
 
 sparkles.on("sendRemindDay_Cancel", async () => {
     if (beforeDay) {
@@ -723,105 +669,6 @@ sparkles.on("sendCustom", async ({ body }) => {
 
 });
 
-
-
-// sparkles.on("sendRemindDay", async () => {
-//     console.log(curentTime(), "on sendRemindDay");
-//     sparkles.emit("remind", { type: "day", status: "sending" });
-//     beforeDay = setInterval(async () => {
-//         try {
-//             if (sendRemindDay_doing) {
-//                 console.log("sendRemindDay_doing is true, skip this tick");
-//                 return;
-//             }
-//             sendRemindDay_doing = true;
-//             let users = await UserModel
-//                 .find(
-//                     {
-//                         "remind.isBeforeDay": false,
-//                         "registerFollow.passAll": true,
-//                         "registerFollow.step4.isTwitterOK": true,
-//                     },
-//                     { telegramID: 1, webminar: 1 }
-//                 )
-//                 .limit(10)
-//                 .exec();
-
-//             if (users.length) {
-//                 for (let i = 0; i < users.length; i++) {
-//                     let join_url = null;
-//                     if (
-//                         users[i].webminar.join_url === "" ||
-//                         users[i].webminar.id.toString() !==
-//                         CONFIG_webinarId.toString()
-//                     ) {
-//                         console.log(
-//                             curentTime(),
-//                             "this user have't join_url or have old webinarId, so create new join_url"
-//                         );
-//                         let getOrCreateRegistrantsBack = await getOrCreateRegistrants(
-//                             { telegramID: users[i].telegramID }
-//                         );
-//                         if (getOrCreateRegistrantsBack.result)
-//                             join_url = getOrCreateRegistrantsBack.join_url;
-//                     } else {
-//                         join_url = users[i].webminar.join_url;
-//                     }
-//                     console.log(
-//                         curentTime(),
-//                         "found user",
-//                         users[i].telegramID,
-//                         users[i].webminar.join_url
-//                     );
-
-//                     let toSend = BOT_BEFORE_DAY.toString().replace("EVENTLINK", users[i].webminar.join_url);
-//                     toSend = toSend.split("\\n").join("\n");
-
-
-//                     await bot.sendMessage(
-//                         users[i].telegramID,
-//                         toSend,
-//                         { disable_web_page_preview: true }
-//                     ).then(e => {
-//                         console.log(("okkk", users[i].telegramID));
-//                     }).catch(err => {
-//                         console.error(err)
-//                     }).finally(fn => {
-//                         UserModel
-//                             .findOneAndUpdate(
-//                                 { telegramID: users[i].telegramID },
-//                                 { $set: { "remind.isBeforeDay": true } },
-//                                 { useFindAndModify: false }
-//                             )
-//                             .exec();
-//                     })
-//                 }
-//                 sendRemindDay_doing = false;
-//             } else {
-//                 console.log(
-//                     curentTime(),
-//                     "no user left, clear sendRemindDay interval"
-//                 );
-//                 clearInterval(beforeDay);
-//                 beforeDay = null;
-//                 sendRemindDay_doing = false;
-//                 sparkles.emit("remind", { type: "day", status: "stoped" });
-//             }
-//         } catch (e) {
-//             console.error(e);
-//             sendRemindDay_doing = false;
-//             sparkles.emit("remind", { type: "day", status: "error" });
-//         }
-//     }, 1000);
-// });
-
-// sparkles.on("sendRemindDay_Cancel", async () => {
-//     if (beforeDay) {
-//         clearInterval(beforeDay);
-//         beforeDay = null;
-//     }
-//     sparkles.emit("remind", { type: "day", status: "stoped" });
-// });
 
 
 
