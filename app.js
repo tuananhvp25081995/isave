@@ -308,7 +308,8 @@ function onError(error) {
     if (error.syscall !== "listen") {
         throw error;
     }
-    var bind = typeof port === "string" ? "Pipe " + port : "Port " + port;
+    var bind = typeof addr === "string" ? "pipe " + addr : "port " + addr.port;
+
 
     switch (error.code) {
         case "EACCES":
