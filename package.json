@@ -1,0 +1,60 @@
+{
+    "name": "minar80",
+    "version": "1.0.0",
+    "description": "",
+    "main": "app.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "start": "nodemon ./bin/www"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/thanhdatpd/minar80.git"
+    },
+    "author": "Patrick Waston",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/thanhdatpd/minar80/issues"
+    },
+    "homepage": "https://github.com/thanhdatpd/minar80#readme",
+    "dependencies": {
+        "@sendgrid/mail": "^7.3.0",
+        "apisauce": "^1.1.2",
+        "axios": "^0.20.0",
+        "chalk": "^4.1.0",
+        "cookie-parser": "~1.4.4",
+        "cookie-session": "^1.4.0",
+        "debug": "~2.6.9",
+        "dotenv": "^8.2.0",
+        "ejs": "^3.1.5",
+        "express": "~4.16.1",
+        "express-session": "^1.17.1",
+        "faker": "^5.1.0",
+        "http-errors": "~1.6.3",
+        "jade": "~1.11.0",
+        "joi": "^17.2.1",
+        "mailgun-js": "^0.22.0",
+        "moment": "^2.29.0",
+        "mongoose": "^5.10.5",
+        "morgan": "~1.9.1",
+        "node-telegram-bot-api": "^0.50.0",
+        "nodemailer": "^6.4.14",
+        "npmlog": "^4.1.2",
+        "passport": "^0.4.1",
+        "passport-local": "^1.0.0",
+        "qs": "^6.9.4",
+        "request": "^2.88.2",
+        "request-promise-native": "^1.0.9",
+        "sib-api-v3-sdk": "^8.0.1",
+        "socket.io": "^2.3.0",
+        "sparkles": "^1.0.1",
+        "tinyurl": "^1.1.7",
+        "url-parse": "^1.4.7",
+        "uuid": "^8.3.0",
+        "wallet-address-validator": "^0.2.4",
+        "xlsx": "^0.16.8"
+    },
+    "nodemonConfig": {
+        "ext": "js, ejs, img, css"
+    }
+}

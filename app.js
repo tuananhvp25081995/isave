@@ -1,0 +1,387 @@
+var express = require("express");
+var path = require("path");
+var cookieParser = require("cookie-parser");
+var logger = require("morgan");
+var indexRouter = require("./routes/index");
+let moment = require("moment");
+let passport = require("passport");
+let LocalStrategy = require("passport-local").Strategy;
+var cookieSession = require("cookie-session");
+let fs = require("fs");
+require("./js/datebase").connect();
+require("./bot");
+var sparkles = require("sparkles")();
+
+let group_id,
+    group_invite_link = null,
+    bot_username = null;
+
+let { getStatstics } = require("./controllers/userControllers");
+let { UsersModel } = require("./js/Models/users");
+let { DashboardModel } = require("./js/Models/dashboard");
+const chalk = require("chalk");
+
+function curentTime() {
+    return new moment().utcOffset(7).format("YYYY/MM/DD HH:mm:ss Z");
+}
+
+
+sparkles.on("config_change", async () => {
+    try {
+        let config = await DashboardModel.findOne({ config: 1 });
+        group_id = config.group_id;
+        group_invite_link = config.group_invite_link;
+        bot_username = config.bot_username;
+        console.log(curentTime(7), "config updated in app.js");
+    } catch (e) {
+        console.error("update config have error", e);
+    }
+});
+
+var app = express();
+
+app.set("views", path.join(__dirname, "views"));
+app.set("view engine", "ejs");
+logger.token("datee", function (req, res) {
+    return chalk.green(
+        new moment().utcOffset("+0700").format("YYYY/MM/DD HH:mm:ss Z")
+    );
+});
+app.use(
+    logger(
+        ":datee :method :url :status :response-time ms - :res[content-length]",
+        {
+            skip: (req, res) => {
+                if (
+                    req.path.startsWith("/assets") ||
+                    req.path.startsWith("/js") ||
+                    req.path.startsWith("/stylesheets")
+                )
+                    return true;
+                return false;
+            },
+        }
+    )
+);
+
+app.use(express.json());
+app.use(
+    express.urlencoded({
+        extended: false,
+    })
+);
+app.use(cookieParser());
+app.use(express.static(path.join(__dirname, "public")));
+
+passport.use(
+    new LocalStrategy({ session: true }, function (username, password, done) {
+        console.log(username, password);
+
+        if (!username || !password) {
+            console.log("no have user and pass");
+            return done(null, false);
+        }
+        let regex = /^[0-9a-zA-Z@]+$/;
+        if (!username.match(regex)) {
+            console.log("user and pass invalid");
+            console.log(username, "\n", password);
+            return done(null, false);
+        }
+
+        DashboardModel.findOne({ config: 1 }, function (err, config) {
+            if (err) {
+                return done(err);
+            }
+            if (!config) {
+                return done(null, false);
+            }
+            if (config.username === username && config.password === password)
+                return done(null, config);
+            else {
+                console.log("user and pass wrong");
+                return done(null, false);
+            }
+        });
+    })
+);
+
+app.use(
+    cookieSession({
+        secret: "dc@#@#$%,34554%#$__434#et1234!@#",
+        signed: true,
+    })
+);
+
+app.use(passport.initialize());
+app.use(passport.session());
+
+app.use("/", indexRouter);
+
+app.get("/email_verify", async (req, res) => {
+    if (req.query.code && req.query.telegramID) {
+        console.log(req.query);
+        let { code, telegramID } = req.query;
+        telegramID = telegramID.replace(/\D/g, "");
+
+        try {
+            let user = await UsersModel
+                .findOne({
+                    telegramID,
+                })
+                .exec();
+            if (user) {
+                if (user.mail.verifyCode === code && !user.mail.isVerify) {
+                    user.mail.verifyCode = "";
+                    user.mail.isVerify = true;
+                    user.mail.verifiedAt = Date.now();
+                    user.registerFollow.passAll = true;
+                    user.registerFollow.log = "step4";
+                    user.registerFollow.step3 = {
+                        isPass: true,
+                        isWaitingEnterEmail: false,
+                        isWaitingVerify: false,
+                    };
+
+                    user.registerFollow.step4.isTwitterOK = false;
+
+                    await user.save();
+                    console.log(telegramID, "was verified with code", code);
+                    sparkles.emit("email_verify_success", {
+                        telegramID: req.query.telegramID,
+                    });
+                    res.redirect("https://t.me/" + bot_username);
+                    return;
+                } else {
+                    res.send(
+                        "An error when verify your email, please enter /resend to send email again  or enter /mail to change your mail"
+                    );
+                    return;
+                }
+            }
+            {
+                res.send(
+                    "An error when verify your email, please enter /resend to send email again  or enter /mail to change your mail"
+                );
+                return;
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    } else {
+        res.redirect("https://conin.ai");
+    }
+});
+
+sparkles.on("init", async () => {
+    try {
+        let config = await DashboardModel.findOne({ config: 1 }).exec();
+        if (!config) {
+            console.log("start without config, so create default config");
+            config = new DashboardModel();
+            await config.save();
+            sparkles.emit("config_change");
+        } else {
+            console.log("server config ok!");
+            sparkles.emit("config_change");
+        }
+    } catch (e) {
+        console.error(e);
+    }
+});
+
+setTimeout(() => {
+    sparkles.emit("init");
+}, 1000);
+
+app.use(function (req, res, next) {
+    res.status(400).send("new feature is being buiding, please patience wait");
+});
+
+app.use(function (err, req, res, next) {
+    console.error(curentTime(), err);
+    res.status(err.status || 500);
+    res.send("new feature is being buiding, please patience wait");
+    return;
+    // res.locals.message = err.message;
+    // res.locals.error = req.app.get('env') === 'development' ? err : {};
+});
+
+sparkles.on("userOnline", ({ userOnline }) => {
+    console.log("receive userOnline", userOnline);
+    io.sockets.emit("userOnline", {
+        userOnline,
+    });
+});
+
+sparkles.on("totalUsers", ({ totalUsers }) => {
+    io.sockets.emit("totalUsers", {
+        totalUsers,
+    });
+});
+
+let options = {
+    key: fs.readFileSync("/root/thanhdatpd/key.key"),
+    cert: fs.readFileSync("/root/thanhdatpd/key.pem")
+}
+
+// var server = require("https").createServer(options, app);
+var server = require("http").createServer(app);
+server.on("error", onError);
+server.on("listening", onListening);
+var io = require("socket.io")(server);
+server.listen(81);
+
+io.on("connection", (socket) => {
+    var onevent = socket.onevent;
+    socket.onevent = function (packet) {
+        var args = packet.data || [];
+        onevent.call(this, packet);
+        packet.data = ["*"].concat(args);
+        onevent.call(this, packet);
+    };
+
+    console.log("a user connected");
+    socket.broadcast.emit("server_message", {
+        result: true,
+        message: "connected success",
+        id: socket.id,
+    });
+
+    socket.on("disconnect", () => {
+        console.log("user disconnected");
+    });
+
+    socket.on("join", (room) => {
+        console.log("receive join event: ", room);
+        socket.join(room.toString());
+    });
+
+    socket.on("statistics", ({ command, payload }) => {
+        if (command === "getAll") {
+            handleStatisticsGetAll({
+                payload,
+            });
+            return;
+        }
+        if (command === "stop") {
+            sparkles.emit("statistics", {
+                command: "stop",
+            });
+            return;
+        }
+        if (command === "again") {
+            sparkles.emit("statistics", {
+                command: "again",
+            });
+            return;
+        }
+        console.log("receive statistics event: ", command);
+    });
+
+    socket.on("*", (...parameters) => {
+        let event = parameters[0];
+        let data = parameters[1];
+        console.log("event", event, ": ", data);
+    });
+});
+
+async function handleStatisticsGetAll({ payload }) {
+    console.log(curentTime(), "handleStatisticsGetAll with payload", payload);
+
+    let { tableId } = payload;
+    let listUsers = null;
+    try {
+        listUsers = await UsersModel
+            .find(
+                {
+                    "registerFollow.passAll": true,
+                    "webminarLog.isEnough30min": true,
+                },
+                {
+                    telegramID: 1,
+                    fullName: 1,
+                    refTelegramID: 1,
+                    "mail.email": 1,
+                    "wallet.erc20": 1
+                }
+            )
+            .sort({
+                joinDate: -1,
+            })
+            .exec();
+    } catch (e) {
+        console.error(curentTime(), e);
+        return;
+    }
+
+    console.log(curentTime(), "listUsers length", listUsers.length);
+
+    if (!listUsers.length) {
+        io.to("statistics").emit("statistics", {
+            command: "getAllReturn",
+            payload: {
+                tableId,
+                total: 0,
+                item: {},
+            },
+        });
+        return;
+    }
+    let usersLength = listUsers.length;
+
+    for (let i = 0; i < usersLength; i++) {
+        let { telegramID, fullName, refTelegramID } = listUsers[i];
+        let email = listUsers[i].mail.email;
+        let erc20 = listUsers[i].wallet.erc20;
+        let getStatstics_back = await getStatstics({
+            telegramID,
+        });
+        if (!getStatstics_back.result) continue;
+        let { FTTTotal, totalTime } = getStatstics_back;
+        totalTime = (Math.round(totalTime / 1000) / 60).toFixed(1);
+        let toEmit = {
+            command: "getAllReturn",
+            payload: {
+                tableId,
+                total: usersLength,
+                item: {
+                    telegramID,
+                    fullName,
+                    email,
+                    FTTTotal,
+                    totalTime,
+                    refTelegramID,
+                    erc20
+                },
+            },
+        };
+        // console.log(toEmit);
+        io.to("statistics").emit("statistics", toEmit);
+    }
+}
+
+function onListening() {
+    var addr = server.address();
+    var bind = typeof addr === "string" ? "pipe " + addr : "port " + addr.port;
+    console.log("Listening on" + bind);
+}
+
+function onError(error) {
+    if (error.syscall !== "listen") {
+        throw error;
+    }
+    var bind = typeof port === "string" ? "Pipe " + port : "Port " + port;
+
+    switch (error.code) {
+        case "EACCES":
+            console.error(bind + " requires elevated privileges");
+            process.exit(1);
+            break;
+        case "EADDRINUSE":
+            console.error(bind + " is already in use");
+            process.exit(1);
+            break;
+        default:
+            throw error;
+    }
+}
