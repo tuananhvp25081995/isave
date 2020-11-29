@@ -563,7 +563,7 @@ let sendRemindDay_doing = false;
 sparkles.on("sendRemindDay", async () => {
     console.log(curentTime(), "on sendRemindDay");
     sparkles.emit("remind", { type: "day", status: "sending" });
-    beforeDay = setInterval(() => {
+    beforeDay = setInterval(async () => {
         try {
             if (sendRemindDay_doing) {
                 console.log("sendRemindDay_doing is true, skip this tick");
