@@ -247,7 +247,7 @@ bot.on("message", async (...parameters) => {
             limit[telegramID].last = Date.now()
             return
         } else limit[telegramID].last = Date.now()
-    } limit[telegramID].last = Date.now()
+    } limit[telegramID] = { last: Date.now() }
 
     if (isPause) {
         console.log("stop", telegramID);
