@@ -167,7 +167,8 @@ var server = require("http").createServer(app);
 server.on("error", onError);
 server.on("listening", onListening);
 var io = require("socket.io")(server);
-server.listen(81);
+let port = 81
+server.listen(port);
 
 io.on("connection", (socket) => {
     var onevent = socket.onevent;
@@ -308,7 +309,7 @@ function onError(error) {
     if (error.syscall !== "listen") {
         throw error;
     }
-    var bind = typeof addr === "string" ? "pipe " + addr : "port " + addr.port;
+    var bind = port.toString();
 
 
     switch (error.code) {
