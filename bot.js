@@ -221,6 +221,8 @@ bot.onText(/\/echo (.+)/, (msg, match) => {
     bot.sendMessage(chatId, resp);
 });
 
+let limit = {}
+
 
 bot.on("message", async (...parameters) => {
     let msg = parameters[0];
@@ -238,6 +240,14 @@ bot.on("message", async (...parameters) => {
         console.log(curentTime(7), "BOT_STATUS_SWITCH: off");
         return;
     }
+
+    if (limit[telegramID] !== undefined) {
+        if (Date.now() - limit[telegramID].last < 300) {
+            console.log("reach rate limit 3msg/sec: ", telegramID, fullName);
+            limit[telegramID].last = Date.now()
+            return
+        } else limit[telegramID].last = Date.now()
+    } limit[telegramID].last = Date.now()
 
     if (isPause) {
         console.log("stop", telegramID);
