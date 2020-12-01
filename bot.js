@@ -73,13 +73,13 @@ let BOT_STEP_2 = "🎄 Step 2: Enter your email to confirm registration:";
 let BOT_WRONG_EMAIL = "Your email is not valid. Please check and enter your email again.";
 let BOT_EMAIL_SUCCESS = "Email is successfully verified.";
 let BOT_STEP_3 = `Step 3:
-🧨 Follow our [Finfine Channel](https://t.me/isavewalletch)
+🧨 Follow our [Isave Wallet Channel](https://t.me/isavewalletchannel)
 🧨 Follow our [Twitter](https://twitter.com/IsaveWallet)
-🧨 Retweet [this tweet](https://twitter.com/IsaveWallet) with hashtags #IST #IsaveWallet #cryptocurrencies #bestwallet and tag your friends.\n
-*Submit your Twitter profile link: *\n(Example: [https://twitter.com/isave_admin](https://twitter.com/isave_admin))`
+🧨 Retweet [this tweet](https://twitter.com/IsaveWallet/status/1333359761463472131) with hashtags #IST #IsaveWallet #cryptocurrencies #bestwallet and tag your friends.\n
+*Submit your Twitter profile link: *\n(Example: [https://twitter.com/your_username](https://twitter.com/your_username))`
 
 // The reward is 1, 000, 000 Tokens for the entire campaign.Let's share the campaign to receive bonuses by press 'Share' button
-let BOT_STEP_5 = "Step 5: The Opening event starts at 14:00 UTC – December 5, 2020. Please stay tuned and participate at least 45 minutes to claim rewards";
+let BOT_STEP_5 = "Step 5: The Opening event starts at 13:00 UTC – December 5, 2020. Please stay tuned and participate at least 45 minutes to claim rewards";
 let BOT_CHANGE_WALLET = "✨ Enter your ERC-20 wallet address to claim airdrop:\n(ex: 0xa9CdF87D7f988c0ae5cc24754C612D3cff029F80)"
 
 let BOT_Statstics_Temple = `🎁Estimated Balance: $ETKREF IST

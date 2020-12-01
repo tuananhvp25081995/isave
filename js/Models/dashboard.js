@@ -60,7 +60,7 @@ Conditions of participation
 ✅Step 1: Join our Telegram Group and Channel
 ✅Step 2: Access to your email and confirm registration
 ✅Step 3: Like our Twitter Channel
-✅Step 4: Participate in FinFine ecosystem online launching event. The event starts at 14:00 UTC on December 5, 2020
+✅Step 4: Participate in FinFine ecosystem online launching event. The event starts at 13:00 UTC on December 5, 2020
 
 - $15 IST token reward for completing the 4 steps above
 Rewards:
