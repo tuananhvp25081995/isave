@@ -392,7 +392,7 @@ bot.on("message", async (...parameters) => {
                         bot.sendMessage(telegramID,
                             "✨ Your unique link to join zoom event: " +
                             (await handleLinkZoom({ telegramID })) + "\n\nPlease keep it save and don't share this link to other people",
-                            { disable_web_page_preview: true, reply_markup: {reply_markup_keyboard} }
+                            { disable_web_page_preview: true, reply_markup: reply_markup_keyboard }
                         );
                         break;
 
@@ -418,7 +418,7 @@ bot.on("message", async (...parameters) => {
 
                     case "change wallet":
                         await UserModel.updateOne({ telegramID }, { "wallet.changeWallet": true });
-                        bot.sendMessage(telegramID, BOT_CHANGE_WALLET, { disable_web_page_preview: true, reply_markup: {reply_markup_keyboard} });
+                        bot.sendMessage(telegramID, BOT_CHANGE_WALLET, { disable_web_page_preview: true, reply_markup: reply_markup_keyboard });
                         break;
 
                     case "/check":
@@ -961,7 +961,9 @@ function handleInvite(bot, msg, first = false) {
                             },
                         ],
                     ],
-                    reply_markup_keyboard: reply_markup_keyboard
+                    keyboard: [[{ text: "Share" }, { text: "Statistics" }],
+                    [{ text: "Change Wallet" }, { text: "Zoom" }]],
+                    resize_keyboard: true,
                 },
             }
         );
