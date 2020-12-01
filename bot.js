@@ -556,7 +556,6 @@ sparkles.on("sendRemindHour", async () => {
                             clearInterval(beforeHour);
                             beforeHour = null;
                             sendRemindHour_doing = false;
-                            break
                         } else if (body.error_code === 403) {
                             console.log("user block bot");
                             console.log({ chat_id, body: body.description });
@@ -650,7 +649,6 @@ sparkles.on("sendRemindDay", async () => {
                             clearInterval(beforeDay);
                             beforeDay = null;
                             sendRemindDay_doing = false;
-                            break
                         } else if (body.error_code === 403) {
                             console.log("user block bot");
                             console.log({ chat_id, body: body.description });
