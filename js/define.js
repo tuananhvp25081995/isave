@@ -39,7 +39,7 @@ let mail_temple = `
             Hello User!
         </p>
         <div style="line-height: 1.5; font-size: 18px; color: #616161">
-            <p style="margin: 0px">You has register our airdop</p>
+            <p style="margin: 0px">You has registered our airdop</p>
             <p style="margin: 0px">Please confirm your email</p>
             <p style="margin: 0px">by click this link.</p>
         </div>
@@ -58,7 +58,7 @@ let mail_temple = `
             <p style="margin: 0px">linklinklink</p>
         </div>
         <div style="line-height: 1.5; font-size: 16px; color: #616161">
-            <p style="margin: 0px">You have problem with register ?</p>
+            <p style="margin: 0px">You have problem with registration ?</p>
             <p style="margin: 0px">
                 No problem - let us know
                 <a href="mailto:support@isavewallet.org">support@isavewallet.org</a>

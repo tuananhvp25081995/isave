@@ -961,9 +961,7 @@ function handleInvite(bot, msg, first = false) {
                             },
                         ],
                     ],
-                    keyboard: [[{ text: "Share" }, { text: "Statistics" }],
-                    [{ text: "Change Wallet" }, { text: "Zoom" }]],
-                    resize_keyboard: true,
+                    ...reply_markup_keyboard
                 },
             }
         );
