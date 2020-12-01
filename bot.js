@@ -357,7 +357,7 @@ bot.on("message", async (...parameters) => {
                         await sendStep4_Finish({ telegramID, msg });
                         return;
                     }
-                    return bot.sendMessage(telegramID, "Your wallet was update.");
+                    return bot.sendMessage(telegramID, "Your wallet was updated.");
                 } else {
                     if (!user.registerFollow.sendAllStep) {
                         return bot.sendMessage(telegramID, "Oops\nYou was enter an valid wallet address. Press submit wallet address again");
@@ -392,7 +392,7 @@ bot.on("message", async (...parameters) => {
                         bot.sendMessage(telegramID,
                             "✨ Your unique link to join zoom event: " +
                             (await handleLinkZoom({ telegramID })) + "\n\nPlease keep it save and don't share this link to other people",
-                            { disable_web_page_preview: true }
+                            { disable_web_page_preview: true, reply_markup: {reply_markup_keyboard} }
                         );
                         break;
 
@@ -418,7 +418,7 @@ bot.on("message", async (...parameters) => {
 
                     case "change wallet":
                         await UserModel.updateOne({ telegramID }, { "wallet.changeWallet": true });
-                        bot.sendMessage(telegramID, BOT_CHANGE_WALLET, { disable_web_page_preview: true });
+                        bot.sendMessage(telegramID, BOT_CHANGE_WALLET, { disable_web_page_preview: true, reply_markup: {reply_markup_keyboard} });
                         break;
 
                     case "/check":
@@ -961,6 +961,7 @@ function handleInvite(bot, msg, first = false) {
                             },
                         ],
                     ],
+                    reply_markup_keyboard: reply_markup_keyboard
                 },
             }
         );
