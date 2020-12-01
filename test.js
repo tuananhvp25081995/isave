@@ -192,7 +192,7 @@ bot.on("message", async (...parameters) => {
     if (parameters[0].text === "stop") {
         clearInterval(i)
         bot.sendMessage(id, "Stop").then(a => {
-            console.log("ssssssss", a);
+            console.log("ssssssss", a.text);
         })
         return
     }

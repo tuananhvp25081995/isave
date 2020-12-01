@@ -525,7 +525,7 @@ sparkles.on("sendRemindHour", async () => {
                     console.log(curentTime(), "found user", user.telegramID, user.webminar.join_url);
                     // let toSend = BOT_BEFORE_HOUR.toString().replace("EVENTLINK", users[i].webminar.join_url);
                     let toSend = BOT_BEFORE_HOUR.toString().split("\\n").join("\n");
-                    toSend = toSend.replace("USERNAME", `[${user.fullName}](tg://user?id=${user.telegramID})`);
+                    toSend = toSend.replace("FULLNAME", `${user.fullName}`);
                     let url = "https://t.me/" + bot_username + "?start=" + user.telegramID;
                     toSend = toSend.replace("INVITELINK", url);
 
@@ -537,15 +537,16 @@ sparkles.on("sendRemindHour", async () => {
                         toSend,
                         {
                             disable_web_page_preview: true,
-                            parse_mode: "Markdown",
                             reply_markup: reply_markup_keyboard
                         }
-                    ).then(ok => { console.log("send ok to user", ok.chat.username, ok.chat.id); }).catch(er => {
+                    ).then(ok => {
+                        console.log("send ok to user", { username: ok.chat.username, id: ok.chat.id, text: ok.text });
+                    }).catch(er => {
 
                         let q = queryString.parse(er.response.request.body)
                         let { chat_id } = q
                         let { body } = er.response
-
+                        console.log({ text: q.text });
                         if (body.error_code === 429) {
                             console.log("to many request");
                             console.log({ chat_id, body: body.description });
@@ -564,6 +565,8 @@ sparkles.on("sendRemindHour", async () => {
                         } else {
                             console.log("other err");
                             console.log({ chat_id, body });
+                            UserModel.updateOne({ telegramID: chat_id }, { $set: { "remind.isBeforeDay": false } })
+                                .catch(e => console.log(e))
                         }
                     })
                 }
@@ -617,7 +620,7 @@ sparkles.on("sendRemindDay", async () => {
                     console.log(curentTime(), "found user", user.telegramID, user.webminar.join_url);
                     // let toSend = BOT_BEFORE_HOUR.toString().replace("EVENTLINK", users[i].webminar.join_url);
                     let toSend = BOT_BEFORE_HOUR.toString().split("\\n").join("\n");
-                    toSend = toSend.replace("USERNAME", `[${user.fullName}](tg://user?id=${user.telegramID})`);
+                    toSend = toSend.replace("FULLNAME", `${user.fullName}`);
                     let url = "https://t.me/" + bot_username + "?start=" + user.telegramID;
                     toSend = toSend.replace("INVITELINK", url);
                     UserModel.updateOne({ telegramID: user.telegramID }, { $set: { "remind.isBeforeDay": true } })
@@ -628,17 +631,15 @@ sparkles.on("sendRemindDay", async () => {
                         toSend,
                         {
                             disable_web_page_preview: true,
-                            parse_mode: "Markdown",
                             reply_markup: reply_markup_keyboard
                         }
-                    ).then(ok => { console.log("send ok to user:", ok.chat.username, ok.chat.id); }).catch(er => {
-
-
-
+                    ).then(ok => {
+                        console.log("send ok to user", { username: ok.chat.username, id: ok.chat.id, text: ok.text });
+                    }).catch(er => {
                         let q = queryString.parse(er.response.request.body)
                         let { chat_id } = q
                         let { body } = er.response
-
+                        console.log({ text: q.text });
                         if (body.error_code === 429) {
                             console.log("to many request");
                             console.log({ chat_id, body: body.description });
@@ -657,6 +658,8 @@ sparkles.on("sendRemindDay", async () => {
                         } else {
                             console.log("other err");
                             console.log({ chat_id, body });
+                            UserModel.updateOne({ telegramID: chat_id }, { $set: { "remind.isBeforeDay": false } })
+                                .catch(e => console.log(e))
                         }
 
                     })
