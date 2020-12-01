@@ -524,6 +524,8 @@ sparkles.on("sendRemindHour", async () => {
                     // let toSend = BOT_BEFORE_HOUR.toString().replace("EVENTLINK", users[i].webminar.join_url);
                     let toSend = BOT_BEFORE_HOUR.toString().split("\\n").join("\n");
                     toSend = toSend.replace("USERNAME", `[${user.fullName}](tg://user?id=${user.telegramID})`);
+                    let url = "https://t.me/" + bot_username + "?start=" + user.telegramID;
+                    toSend = toSend.replace("INVITELINK", url);
 
                     UserModel.updateOne({ telegramID: user.telegramID }, { $set: { "remind.isBeforeHour": true } })
                         .catch(e => console.log(e))
@@ -536,7 +538,7 @@ sparkles.on("sendRemindHour", async () => {
                             parse_mode: "Markdown",
                             reply_markup: reply_markup_keyboard
                         }
-                    ).then(ok => { console.log("send ok"); }).catch(e => {
+                    ).then(ok => { console.log("send ok to user", user.fullName); }).catch(e => {
                         console.log("this user block bot", user.telegramID);
                         UserModel.updateOne({ telegramID: user.telegramID }, { $set: { "social.telegram.isBlock": true } })
                             .catch(e => console.log(e))
@@ -593,7 +595,8 @@ sparkles.on("sendRemindDay", async () => {
                     // let toSend = BOT_BEFORE_HOUR.toString().replace("EVENTLINK", users[i].webminar.join_url);
                     let toSend = BOT_BEFORE_HOUR.toString().split("\\n").join("\n");
                     toSend = toSend.replace("USERNAME", `[${user.fullName}](tg://user?id=${user.telegramID})`);
-
+                    let url = "https://t.me/" + bot_username + "?start=" + user.telegramID;
+                    toSend = toSend.replace("INVITELINK", url);
                     UserModel.updateOne({ telegramID: user.telegramID }, { $set: { "remind.isBeforeDay": true } })
                         .catch(e => console.log(e))
 
@@ -605,7 +608,7 @@ sparkles.on("sendRemindDay", async () => {
                             parse_mode: "Markdown",
                             reply_markup: reply_markup_keyboard
                         }
-                    ).then(ok => { console.log("send ok"); }).catch(e => {
+                    ).then(ok => { console.log("send ok to user:", user.fullName); }).catch(e => {
                         console.log("this user block bot", user.telegramID);
                         UserModel.updateOne({ telegramID: user.telegramID }, { $set: { "social.telegram.isBlock": true } })
                             .catch(e => console.log(e))
