@@ -11,6 +11,8 @@ let nodemailer = require("nodemailer");
 let WAValidator = require('wallet-address-validator');
 let parse = require('url-parse');
 const chalk = require("chalk");
+const queryString = require('query-string');
+
 let {
     handleNewUserNoRef,
     handleNewUserWithRef,
@@ -538,10 +540,32 @@ sparkles.on("sendRemindHour", async () => {
                             parse_mode: "Markdown",
                             reply_markup: reply_markup_keyboard
                         }
-                    ).then(ok => { console.log("send ok to user", ok.chat.username, ok.chat.id); }).catch(e => {
-                        console.log("this user block bot", user.telegramID);
-                        UserModel.updateOne({ telegramID: user.telegramID }, { $set: { "social.telegram.isBlock": true } })
-                            .catch(e => console.log(e))
+                    ).then(ok => { console.log("send ok to user", ok.chat.username, ok.chat.id); }).catch(er => {
+
+                        let q = queryString.parse(er.response.request.body)
+                        let { chat_id } = q
+                        let { body } = er.response
+
+                        if (body.error_code === 429) {
+                            console.log("to many request");
+                            console.log({ chat_id, body: body.description });
+                            UserModel.updateOne({ telegramID: chat_id }, { $set: { "remind.isBeforeHour": false } })
+                                .catch(e => console.log(e))
+                            sparkles.emit("remind", { type: "hour", status: "stoped" });
+                            console.log(curentTime(), "to many request, clear sendRemindHour interval");
+                            clearInterval(beforeHour);
+                            beforeHour = null;
+                            sendRemindHour_doing = false;
+                            break
+                        } else if (body.error_code === 403) {
+                            console.log("user block bot");
+                            console.log({ chat_id, body: body.description });
+                            UserModel.updateOne({ telegramID: chat_id }, { $set: { "social.telegram.isBlock": true } })
+                                .catch(e => console.log(e))
+                        } else {
+                            console.log("other err");
+                            console.log({ chat_id, body });
+                        }
                     })
                 }
                 sendRemindHour_doing = false;
@@ -608,10 +632,35 @@ sparkles.on("sendRemindDay", async () => {
                             parse_mode: "Markdown",
                             reply_markup: reply_markup_keyboard
                         }
-                    ).then(ok => { console.log("send ok to user:", ok.chat.username, ok.chat.id); }).catch(e => {
-                        console.log("this user block bot", user.telegramID);
-                        UserModel.updateOne({ telegramID: user.telegramID }, { $set: { "social.telegram.isBlock": true } })
-                            .catch(e => console.log(e))
+                    ).then(ok => { console.log("send ok to user:", ok.chat.username, ok.chat.id); }).catch(er => {
+
+
+
+                        let q = queryString.parse(er.response.request.body)
+                        let { chat_id } = q
+                        let { body } = er.response
+
+                        if (body.error_code === 429) {
+                            console.log("to many request");
+                            console.log({ chat_id, body: body.description });
+                            UserModel.updateOne({ telegramID: chat_id }, { $set: { "remind.isBeforeDay": false } })
+                                .catch(e => console.log(e))
+                            sparkles.emit("remind", { type: "day", status: "stoped" });
+                            console.log(curentTime(), "to many request, clear sendRemindDay interval");
+                            clearInterval(beforeDay);
+                            beforeDay = null;
+                            sendRemindDay_doing = false;
+                            break
+                        } else if (body.error_code === 403) {
+                            console.log("user block bot");
+                            console.log({ chat_id, body: body.description });
+                            UserModel.updateOne({ telegramID: chat_id }, { $set: { "social.telegram.isBlock": true } })
+                                .catch(e => console.log(e))
+                        } else {
+                            console.log("other err");
+                            console.log({ chat_id, body });
+                        }
+
                     })
                 }
                 sendRemindDay_doing = false;

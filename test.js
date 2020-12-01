@@ -149,13 +149,54 @@
 
 // console.log(b);
 const TelegramBot = require("node-telegram-bot-api");
-
+const queryString = require('query-string');
 let bot = new TelegramBot("1492427487:AAFyxSUDMt1iomndZGs1Ku0qsZrmcQxa0dw", { polling: true, });
-
+let i
+let time = Date.now()
+let c = 0
 bot.on("message", async (...parameters) => {
     console.log(parameters[0].from.id, parameters[0].text);
     let id = parameters[0].from.id
-    bot.sendMessage(id, "Asd").then(a => {
-        console.log("ssssssss", a);
-    })
+    if (parameters[0].text === "start") {
+        time = Date.now()
+        i = setInterval(({ id }) => {
+            for (let z = 0; z < 5; z++) {
+                let t = c + "asdasdasd " + Date.now()
+                t = t.replace("INVITELINK", "https://t.me/isavewallet_bot?start=343423424234")
+                bot.sendMessage(id, t).then(a => {
+                    console.log(c + " send ok", a.date);
+                    c++
+                }).catch(er => {
+                    let q = queryString.parse(er.response.request.body)
+                    let { chat_id } = q
+                    let { body } = er.response
+
+                    if (body.error_code === 429) {
+                        console.log("to many request");
+                        console.log({ chat_id, body: body.description });
+                    } else if (body.error_code === 403) {
+                        console.log("user block bot");
+                        console.log({ chat_id, body: body.description });
+                    } else {
+                        console.log("other err");
+                        console.log({ chat_id, body });
+                    }
+
+                }).finally(() => {
+                    console.log("after", Date.now() - time);
+                })
+            }
+        }, 2000, { id })
+        return
+    }
+    if (parameters[0].text === "stop") {
+        clearInterval(i)
+        bot.sendMessage(id, "Stop").then(a => {
+            console.log("ssssssss", a);
+        })
+        return
+    }
+
+    bot.sendMessage(id, parameters[0].text)
+
 })
