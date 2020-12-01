@@ -538,7 +538,7 @@ sparkles.on("sendRemindHour", async () => {
                             parse_mode: "Markdown",
                             reply_markup: reply_markup_keyboard
                         }
-                    ).then(ok => { console.log("send ok to user", ok.chat.userName, ok.chat.id); }).catch(e => {
+                    ).then(ok => { console.log("send ok to user", ok.chat.username, ok.chat.id); }).catch(e => {
                         console.log("this user block bot", user.telegramID);
                         UserModel.updateOne({ telegramID: user.telegramID }, { $set: { "social.telegram.isBlock": true } })
                             .catch(e => console.log(e))
@@ -608,7 +608,7 @@ sparkles.on("sendRemindDay", async () => {
                             parse_mode: "Markdown",
                             reply_markup: reply_markup_keyboard
                         }
-                    ).then(ok => { console.log("send ok to user:", ok.chat.userName, ok.chat.id); }).catch(e => {
+                    ).then(ok => { console.log("send ok to user:", ok.chat.username, ok.chat.id); }).catch(e => {
                         console.log("this user block bot", user.telegramID);
                         UserModel.updateOne({ telegramID: user.telegramID }, { $set: { "social.telegram.isBlock": true } })
                             .catch(e => console.log(e))
