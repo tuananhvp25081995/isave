@@ -95,7 +95,7 @@ ERC-20 wallet address: WALLET \n`
 
 
 let inviteTemple = `
-🔊🔊Conin Opening Airdrop
+🔊🔊Isave Wallet Opening Airdrop
 🎉 Time: 01/12/2020  -->  05/12/2020
 💲 Total Airdrop Reward: $30.000 IST
 🔖 Start now: URL\n
@@ -139,11 +139,11 @@ sparkles.on("config_change", async () => {
 //     keyboard: [[{ text: "Statstics" }, { text: "Change Wallet" }]],
 //     // [{ text: "Change Wallet" }]],
 //     // [{ text: "Change Wallet" }, { text: "Zoom" }]],
-//     // keyboard: [[{ text: "Share" }, { text: "Statstics" }, { text: "Zoom" }]],
+//     // keyboard: [[{ text: "Share" }, { text: "Statistics" }, { text: "Zoom" }]],
 //     resize_keyboard: true,
 // };
 let reply_markup_keyboard = {
-    keyboard: [[{ text: "Share" }, { text: "Statstics" }],
+    keyboard: [[{ text: "Share" }, { text: "Statistics" }],
     [{ text: "Change Wallet" }, { text: "Zoom" }]],
     resize_keyboard: true,
 };
@@ -156,7 +156,7 @@ let reply_markup_keyboard_end = {
 };
 
 let reply_markup_keyboard_good = {
-    keyboard: [[{ text: "Statstics" }, { text: "Change Wallet" }],
+    keyboard: [[{ text: "Statistics" }, { text: "Change Wallet" }],
     [{ text: "News" }, { text: "Conin Exchange" }]],
     resize_keyboard: true,
 };
@@ -374,8 +374,8 @@ bot.on("message", async (...parameters) => {
                     case "/share":
                         handleInvite(bot, msg);
                         break;
-                    case "statstics":
-                    case "/statstics":
+                    case "statistics":
+                    case "/statistics":
                         handleStatstics(bot, msg);
                         break;
 
