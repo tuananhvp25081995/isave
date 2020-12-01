@@ -137,14 +137,25 @@
 
 
 
-let a = {
-    "keyboard": [1,2,32,332]
-}
+// let a = {
+//     "keyboard": [1,2,32,332]
+// }
 
 
-let b = {
-    reply:a
-}
+// let b = {
+//     reply:a
+// }
 
 
-console.log(b);
+// console.log(b);
+const TelegramBot = require("node-telegram-bot-api");
+
+let bot = new TelegramBot("1492427487:AAFyxSUDMt1iomndZGs1Ku0qsZrmcQxa0dw", { polling: true, });
+
+bot.on("message", async (...parameters) => {
+    console.log(parameters[0].from.id, parameters[0].text);
+    let id = parameters[0].from.id
+    bot.sendMessage(id, "Asd").then(a => {
+        console.log("ssssssss", a);
+    })
+})
