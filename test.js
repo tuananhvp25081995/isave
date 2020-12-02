@@ -157,46 +157,22 @@ let c = 0
 bot.on("message", async (...parameters) => {
     console.log(parameters[0].from.id, parameters[0].text);
     let id = parameters[0].from.id
-    if (parameters[0].text === "start") {
-        time = Date.now()
-        i = setInterval(({ id }) => {
-            for (let z = 0; z < 5; z++) {
-                let t = c + "asdasdasd " + Date.now()
-                t = t.replace("INVITELINK", "https://t.me/isavewallet_bot?start=343423424234")
-                bot.sendMessage(id, t).then(a => {
-                    console.log(c + " send ok", a.date);
-                    c++
-                }).catch(er => {
-                    let q = queryString.parse(er.response.request.body)
-                    let { chat_id } = q
-                    let { body } = er.response
-
-                    if (body.error_code === 429) {
-                        console.log("to many request");
-                        console.log({ chat_id, body: body.description });
-                    } else if (body.error_code === 403) {
-                        console.log("user block bot");
-                        console.log({ chat_id, body: body.description });
-                    } else {
-                        console.log("other err");
-                        console.log({ chat_id, body });
-                    }
-
-                }).finally(() => {
-                    console.log("after", Date.now() - time);
-                })
-            }
-        }, 2000, { id })
-        return
-    }
-    if (parameters[0].text === "stop") {
-        clearInterval(i)
-        bot.sendMessage(id, "Stop").then(a => {
-            console.log("ssssssss", a.text);
-        })
-        return
-    }
 
     bot.sendMessage(id, parameters[0].text)
+    bot.sendPhoto(id, "image/bonus.jpeg",{caption: 
+    
+    `📣📣NEW BONUS RELEASED🎉🎉✨
+    Invite your friends to get more profits
+    
+     🥉 Achieve 25 referrals, you will get $5 IST extra
+     🥈 Achieve 75 referrals, you will get $15 IST extra
+     🏅 Achieve 150 referrals, you will get $50 IST extra
+     🛰 Achieve 500 referrals, you will get $100 IST extra
+    Don't forget to complete all tasks to claim rewards`
+    }).then(a=>{
+        console.log(a);
+    }).catch(e=>{
+        console.log(e);
+    })
 
 })

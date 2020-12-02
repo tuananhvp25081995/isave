@@ -619,22 +619,23 @@ sparkles.on("sendRemindDay", async () => {
                 for (user of users) {
                     console.log(curentTime(), "found user", user.telegramID, user.webminar.join_url);
                     // let toSend = BOT_BEFORE_HOUR.toString().replace("EVENTLINK", users[i].webminar.join_url);
-                    let toSend = BOT_BEFORE_HOUR.toString().split("\\n").join("\n");
+                    let toSend = BOT_BEFORE_DAY.toString().split("\\n").join("\n");
                     toSend = toSend.replace("FULLNAME", `${user.fullName}`);
                     let url = "https://t.me/" + bot_username + "?start=" + user.telegramID;
                     toSend = toSend.replace("INVITELINK", url);
                     UserModel.updateOne({ telegramID: user.telegramID }, { $set: { "remind.isBeforeDay": true } })
                         .catch(e => console.log(e))
 
-                    bot.sendMessage(
+                    bot.sendPhoto(
                         user.telegramID,
-                        toSend,
+                        "image/bonus.jpeg",
                         {
+                            caption: toSend,
                             disable_web_page_preview: true,
                             reply_markup: reply_markup_keyboard
                         }
                     ).then(ok => {
-                        console.log("send ok to user", { username: ok.chat.username, id: ok.chat.id, text: ok.text });
+                        console.log("send img ok to user", { username: ok.chat.username, id: ok.chat.id, caption: ok.caption });
                     }).catch(er => {
                         let q = queryString.parse(er.response.request.body)
                         let { chat_id } = q
