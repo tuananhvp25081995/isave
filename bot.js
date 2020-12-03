@@ -613,7 +613,7 @@ sparkles.on("sendRemindDay", async () => {
                 "webminar.join_url": { $ne: "" },
                 "social.telegram.isBlock": false
             }, { telegramID: 1, webminar: 1, fullName: 1 })
-                .limit(30)
+                .limit(40)
 
             if (users.length) {
                 for (user of users) {
