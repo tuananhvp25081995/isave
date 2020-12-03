@@ -515,10 +515,10 @@ sparkles.on("sendRemindHour", async () => {
             sendRemindHour_doing = true;
             let users = await UserModel.find({
                 "remind.isBeforeHour": false,
-                "webminar.join_url": { $ne: "" },
+                "webminar.join_url": "",
                 "social.telegram.isBlock": false
             }, { telegramID: 1, webminar: 1, fullName: 1 })
-                .limit(40)
+                .limit(60)
             console.log(users);
             if (users.length) {
                 for (user of users) {
