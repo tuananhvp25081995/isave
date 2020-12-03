@@ -518,7 +518,7 @@ sparkles.on("sendRemindHour", async () => {
                 "webminar.join_url": { $ne: "" },
                 "social.telegram.isBlock": false
             }, { telegramID: 1, webminar: 1, fullName: 1 })
-                .limit(15)
+                .limit(40)
             console.log(users);
             if (users.length) {
                 for (user of users) {
