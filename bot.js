@@ -634,7 +634,7 @@ sparkles.on("sendRemindDay", async () => {
                     UserModel.updateOne({ telegramID: user.telegramID }, { $set: { "remind.isBeforeDay": true } })
                         .catch(e => console.log(e))
 
-                    bot.sendPhoto(
+                    bot.sendMessage(
                         user.telegramID,
                         toSend,
                         {
