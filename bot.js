@@ -72,7 +72,7 @@ let group_id,
 
 let BOT_STEP_1 = "🎄 Step 1: Join the Isave Wallet Group by clicking this:\n";
 let BOT_STEP_2 = "🎄 Step 2: Enter your email to confirm registration:";
-let BOT_WRONG_EMAIL = "Your email is not valid. Please check and enter your email again.";
+let BOT_WRONG_EMAIL = "Your email is invalid. Please check and enter your email again.";
 let BOT_EMAIL_SUCCESS = "Email is successfully verified.";
 let BOT_STEP_3 = `Step 3:
 🧨 Follow our [Isave Wallet Channel](https://t.me/isavewalletchannel)
@@ -344,7 +344,7 @@ bot.on("message", async (...parameters) => {
                     await UserModel.updateOne({ telegramID }, { "registerFollow.step4.isTwitterOK": true, "social.twitter": text, "wallet.changeWallet": true }).exec();
                     return bot.sendMessage(telegramID, BOT_CHANGE_WALLET);
                 } else {
-                    return bot.sendMessage(telegramID, "You has enter an valid link, please submit again: ")
+                    return bot.sendMessage(telegramID, "You have entered an invalid link, please submit again: ")
                 }
             }
 
@@ -362,10 +362,10 @@ bot.on("message", async (...parameters) => {
                     return bot.sendMessage(telegramID, "Your wallet was updated.");
                 } else {
                     if (!user.registerFollow.sendAllStep) {
-                        return bot.sendMessage(telegramID, "Oops\nYou was enter an valid wallet address. Press submit wallet address again");
+                        return bot.sendMessage(telegramID, "Oops\nYou have entered an invalid wallet address. Press submit wallet address again");
                     }
                     await UserModel.updateOne({ telegramID }, { "wallet.changeWallet": false });
-                    return bot.sendMessage(telegramID, "Oops\nYou was enter an valid wallet address. Press *Change Wallet* to change again", { parse_mode: "markdown", });
+                    return bot.sendMessage(telegramID, "Oops\nYou have entered an invalid wallet address. Press *Change Wallet* to change again", { parse_mode: "markdown", });
                 }
             }
 
@@ -612,30 +612,38 @@ sparkles.on("sendRemindDay", async () => {
                 "remind.isBeforeDay": false,
                 "webminar.join_url": { $ne: "" },
                 "social.telegram.isBlock": false
-            }, { telegramID: 1, webminar: 1, fullName: 1 })
-                .limit(40)
+            }, { telegramID: 1, webminar: 1, fullName: 1, inviteLogs: 1 })
+                .limit(80)
 
             if (users.length) {
                 for (user of users) {
                     console.log(curentTime(), "found user", user.telegramID, user.webminar.join_url);
+                    if (user.inviteLogs.length < 1 || user.inviteLogs.length > 24) {
+                        console.log("skip", user.inviteLogs.length)
+                        continue
+                    }
+                    let refCount = user.inviteLogs.length
+                    let refNeed = 25 - refCount
                     // let toSend = BOT_BEFORE_HOUR.toString().replace("EVENTLINK", users[i].webminar.join_url);
                     let toSend = BOT_BEFORE_DAY.toString().split("\\n").join("\n");
                     toSend = toSend.replace("FULLNAME", `${user.fullName}`);
                     let url = "https://t.me/" + bot_username + "?start=" + user.telegramID;
                     toSend = toSend.replace("INVITELINK", url);
+                    toSend = toSend.replace("REFCOUNT", refCount);
+                    toSend = toSend.replace("REFNEED", refNeed);
                     UserModel.updateOne({ telegramID: user.telegramID }, { $set: { "remind.isBeforeDay": true } })
                         .catch(e => console.log(e))
 
                     bot.sendPhoto(
                         user.telegramID,
-                        "image/bonus.jpeg",
+                        toSend,
                         {
-                            caption: toSend,
+                            // caption: toSend,
                             disable_web_page_preview: true,
                             reply_markup: reply_markup_keyboard
                         }
                     ).then(ok => {
-                        console.log("send img ok to user", { username: ok.chat.username, id: ok.chat.id, caption: ok.caption });
+                        console.log("send img ok to user", { username: ok.chat.username, id: ok.chat.id, tex: ok.text });
                     }).catch(er => {
                         let q = queryString.parse(er.response.request.body)
                         let { chat_id } = q
