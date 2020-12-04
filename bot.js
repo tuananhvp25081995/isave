@@ -620,6 +620,8 @@ sparkles.on("sendRemindDay", async () => {
                     console.log(curentTime(), "found user", user.telegramID, user.webminar.join_url);
                     if (user.inviteLogs.length < 1 || user.inviteLogs.length > 24) {
                         console.log("skip", user.inviteLogs.length)
+                        UserModel.updateOne({ telegramID: user.telegramID }, { $set: { "remind.isBeforeDay": true } })
+                            .catch(e => console.log(e))
                         continue
                     }
                     let refCount = user.inviteLogs.length
