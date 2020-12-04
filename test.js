@@ -155,11 +155,12 @@ let i
 let time = Date.now()
 let c = 0
 bot.on("message", async (...parameters) => {
+    console.log(parameters);
     console.log(parameters[0].from.id, parameters[0].text);
     let id = parameters[0].from.id
 
     bot.sendMessage(id, `Hello FULLNAME,\nGreat news coming🎉🎉!!\n\nYou have invited REFCOUNT referrals successfully. Only REFNEED referral(s) to go to get $5 IST bonus\nInvite more to get bigger profit!\n\n🥉 Achieve 25 referrals, you will get $5 IST extra\n 🥈 Achieve 75 referrals, you will get $15 IST extra\n 🏅 Achieve 150 referrals, you will get $50 IST extra\n 🛰 Achieve 500 referrals, you will get $100 IST extra\nDon't forget to complete all tasks to claim rewards
-`)
+`).then(a => console.log(a))
     // bot.sendPhoto(id, "image/bonus.jpeg",{caption: 
 
     // `📣📣NEW BONUS RELEASED🎉🎉✨
