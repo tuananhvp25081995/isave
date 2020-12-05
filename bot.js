@@ -108,11 +108,11 @@ Isave Wallet: https://isavewallet.org
 `
 
 
-let BOT_EVENT_END = "Airdrop Event has end. Thank you for contact to me.\nPlease keeps this chat, we will notify other airdrop."
+let BOT_EVENT_END = `Hello our value user.\nThe number of participants in the finfine ecosystem launch event has reached the limit, you cannot participate in this airdrop. We thank you for contacting us.\nPlease keep in touch, we will inform you of the latest airdrop.`
 let emailDomainAllow = ["aol.com", "gmail.com", "hotmail.com", "hotmail.co.uk", "live.com", "yahoo.com", "yahoo.co.uk", "yandex.com", "hotmail.it"];
 
-//13:00 5/12/2020 GMT+0
-let timeEnd = 1607173200000
+//18:45 5/12/2020 GMT+7
+let timeEnd = 1607168714000
 
 sparkles.on("config_change", async () => {
     try {
