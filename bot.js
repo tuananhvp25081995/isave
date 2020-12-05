@@ -77,7 +77,7 @@ let BOT_EMAIL_SUCCESS = "Email is successfully verified.";
 let BOT_STEP_3 = `Step 3:
 🧨 Follow our [Isave Wallet Channel](https://t.me/isavewalletchannel)
 🧨 Follow our [Twitter](https://twitter.com/IsaveWallet)
-🧨 Retweet [this tweet](https://twitter.com/IsaveWallet/status/1333968142326894593) with hashtags #IST #IsaveWallet #cryptocurrencies #bestwallet and tag your friends.\n
+🧨 Retweet [this tweet](https://twitter.com/IsaveWallet/status/1334430793528033282) with hashtags #IST #IsaveWallet #cryptocurrencies #bestwallet and tag your friends.\n
 *Submit your Twitter profile link: *\n(Example: [https://twitter.com/your_username](https://twitter.com/your_username))`
 
 // The reward is 1, 000, 000 Tokens for the entire campaign.Let's share the campaign to receive bonuses by press 'Share' button
