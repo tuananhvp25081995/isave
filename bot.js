@@ -515,19 +515,20 @@ sparkles.on("sendRemindHour", async () => {
             sendRemindHour_doing = true;
             let users = await UserModel.find({
                 "remind.isBeforeHour": false,
-                "webminar.join_url": "",
+                "webminar.join_url": {$ne: ""},
                 "social.telegram.isBlock": false
             }, { telegramID: 1, webminar: 1, fullName: 1 })
                 .limit(70)
             console.log(users);
             if (users.length) {
                 for (user of users) {
-                    console.log(curentTime(), "found user", user.telegramID, user.webminar.join_url);
+                    let joinlink = await handleLinkZoom({ telegramID: user.telegramID })
+                    console.log(curentTime(), "found user", user.telegramID, joinlink);
                     // let toSend = BOT_BEFORE_HOUR.toString().replace("EVENTLINK", users[i].webminar.join_url);
                     let toSend = BOT_BEFORE_HOUR.toString().split("\\n").join("\n");
                     toSend = toSend.replace("FULLNAME", `${user.fullName}`);
 
-                    toSend = toSend.replace("JOINLINK", await handleLinkZoom({ telegramID: user.telegramID }))
+                    toSend = toSend.replace("JOINLINK", joinlink)
 
                     // let url = "https://t.me/" + bot_username + "?start=" + user.telegramID;
                     // toSend = toSend.replace("INVITELINK", url);
