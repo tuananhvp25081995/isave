@@ -111,8 +111,8 @@ Isave Wallet: https://isavewallet.org
 let BOT_EVENT_END = "Airdrop Event has end. Thank you for contact to me.\nPlease keeps this chat, we will notify other airdrop."
 let emailDomainAllow = ["aol.com", "gmail.com", "hotmail.com", "hotmail.co.uk", "live.com", "yahoo.com", "yahoo.co.uk", "yandex.com", "hotmail.it"];
 
-//14:00 5/12/2020 GMT+0
-let timeEnd = 1607176800000
+//13:00 5/12/2020 GMT+0
+let timeEnd = 1607173200000
 
 sparkles.on("config_change", async () => {
     try {
@@ -153,13 +153,13 @@ let reply_markup_keyboard = {
 
 
 let reply_markup_keyboard_end = {
-    keyboard: [[{ text: "News" }, { text: "Conin Exchange" }]],
+    keyboard: [[{ text: "News" }, { text: "Isavewallet" }]],
     resize_keyboard: true,
 };
 
 let reply_markup_keyboard_good = {
     keyboard: [[{ text: "Statistics" }, { text: "Change Wallet" }],
-    [{ text: "News" }, { text: "Conin Exchange" }]],
+    [{ text: "News" }, { text: "Isavewallet" }]],
     resize_keyboard: true,
 };
 
@@ -265,7 +265,7 @@ bot.on("message", async (...parameters) => {
             if (Date.now() > timeEnd) {
                 if (!user || !user.registerFollow.step4.isTwitterOK) {
                     console.log(curentTime(7), fullName, telegramID, "End event. With text:", text);
-                    bot.sendMessage(telegramID, BOT_EVENT_END).catch(e => { console.log(e) })
+                    bot.sendMessage(telegramID, BOT_EVENT_END, {reply_markup: reply_markup_keyboard_end}).catch(e => { console.log(e) })
                     return;
                 }
             }
