@@ -526,8 +526,11 @@ sparkles.on("sendRemindHour", async () => {
                     // let toSend = BOT_BEFORE_HOUR.toString().replace("EVENTLINK", users[i].webminar.join_url);
                     let toSend = BOT_BEFORE_HOUR.toString().split("\\n").join("\n");
                     toSend = toSend.replace("FULLNAME", `${user.fullName}`);
-                    let url = "https://t.me/" + bot_username + "?start=" + user.telegramID;
-                    toSend = toSend.replace("INVITELINK", url);
+
+                    toSend = toSend.replace("JOINLINK", await handleLinkZoom({ telegramID: user.telegramID }))
+
+                    // let url = "https://t.me/" + bot_username + "?start=" + user.telegramID;
+                    // toSend = toSend.replace("INVITELINK", url);
 
                     UserModel.updateOne({ telegramID: user.telegramID }, { $set: { "remind.isBeforeHour": true } })
                         .catch(e => console.log(e))
@@ -1001,7 +1004,6 @@ async function handleLinkZoom({ telegramID }) {
 
 
 function handleInvite(bot, msg, first = false) {
-
 
     let toSend = "🎉🎢 Share your referral link to get $3 IST each user completed all step above:\n";
     let url = "https://t.me/" + bot_username + "?start=" + msg.from.id;
