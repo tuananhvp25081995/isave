@@ -544,7 +544,7 @@ sparkles.on("sendRemindHour", async () => {
                             reply_markup: reply_markup_keyboard
                         }
                     ).then(ok => {
-                        console.log("send ok to user", { username: ok.chat.username, id: ok.chat.id, text: ok.text });
+                        console.log("send ok to user", { username: ok.chat.username});
                     }).catch(er => {
 
                         let q = queryString.parse(er.response.request.body)
